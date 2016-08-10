@@ -6,6 +6,10 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.util.LifecycleSupport;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 
 /**
@@ -35,13 +39,19 @@ public class HttpProcessor implements Lifecycle, Runnable{
 
     }
 
-    public synchronized void await() {
+    public synchronized Socket await() {
 
     }
 
     @Override
     public void run() {
 
+        while(!stopped) {
+
+            Socket socket = await();
+
+            process(socket);
+        }
     }
 
     // ------------------------------------------------------------- Implements Lifecycle
@@ -92,4 +102,52 @@ public class HttpProcessor implements Lifecycle, Runnable{
     }
 
 
+    private void process(Socket socket) {
+
+        SocketInputStream inputStream = null;
+        OutputStream outputStream = null;
+
+        inputStream = new SocketInputStream(socket.getInputStream());
+        outputStream = socket.getOutputStream();
+
+        while(true) {
+
+            request.setStream(inputStream);
+            request.setResponse(response);
+            response.setStream(outputStream);
+
+            ((HttpServletRequest)response.getResponse()).setHeader("Server", SERVER_INFO);
+
+            parseConnection(socket);
+            parseRequest(input, output);
+            if (request.getRequest().getProtocol().startWith("HTTP/0")) {
+                parseHeaders(input);
+            }
+            if (http11) {
+                ackRequest(output);
+            }
+
+
+            ((HttpServletResponse)response.getReponse()).setHeader("Date", FastHttpDateFormat.getCurrentDate());
+
+            conenctor.getContainer().invoke(request, response);
+
+            if (finishResponse) {
+                response.finishResponse();
+            }
+
+            request.recycle();
+            response.recycle();
+        }
+
+
+        try {
+            shutdownInput(inputStream);
+            socket.close();
+        } catch (IOException e) {
+
+        }
+
+
+    }
 }
