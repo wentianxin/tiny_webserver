@@ -23,6 +23,8 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     private int acceptCount;
 
+    private Container contaienr;
+
     private ServerSocket serverSocket;
 
     private ServerSocketFactory factory;
@@ -123,7 +125,7 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
             }
         }
 
-        processor.process(socket);
+        processor.assign(socket);
     }
 
 
@@ -142,6 +144,9 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     }
 
+
+
+
     // -------------------------------------------------------- Private methods
 
     private ServerSocket open() throws IOException {
@@ -158,23 +163,12 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     }
 
-    private ServerSocketFactory getFactory() {
-
-        if (this.factory == null) {
-            this.factory = new DefaultServerSocketFactory();
-        }
-
-        return this.factory;
-    }
-
-
     private void threadStart() {
 
         thread = new Thread(this, threadName);
         thread.setDaemon(true);
         thread.start();
     }
-
 
     private HttpProcessor newProcessor() {
         HttpProcessor processor = new HttpProcessor(this, curProcessors++);
@@ -210,4 +204,31 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
     }
 
 
+
+    // ------------------------------------------------------- implements Connector Properties
+
+    @Override
+    public Container getContainer() {
+        return contaienr;
+    }
+
+    @Override
+    public void setContainer(Container container) {
+        this.contaienr = container;
+    }
+
+    @Override
+    public ServerSocketFactory getFactory() {
+
+        if (this.factory == null) {
+            this.factory = new DefaultServerSocketFactory();
+        }
+
+        return this.factory;
+    }
+
+    @Override
+    public void setFactory(ServerSocketFactory factory) {
+
+    }
 }
