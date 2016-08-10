@@ -4,6 +4,8 @@ import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleSupport;
 
 import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+import java.io.IOException;
 
 /**
  * Created by tisong on 8/9/16.
@@ -19,6 +21,11 @@ public class SimpleWrapper implements Wrapper, Pipeline, Lifecycle{
     private Loader  loader;
     private LifecycleSupport lifecycle;
 
+
+    public SimpleWrapper() {
+        this.pipeline = new SimplePipeline();
+        this.pipeline.setBasic(new SimpleWrapperValue());
+    }
 
     @Override
     public void start() throws LifecycleException {
@@ -71,8 +78,28 @@ public class SimpleWrapper implements Wrapper, Pipeline, Lifecycle{
     }
 
     @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
     public void setParent(Container container) {
 
+    }
+
+    @Override
+    public Container getParent() {
+        return null;
+    }
+
+    @Override
+    public void setParentClassLoader(ClassLoader parent) {
+
+    }
+
+    @Override
+    public ClassLoader getParentClassLoader() {
+        return null;
     }
 
     @Override
@@ -81,8 +108,43 @@ public class SimpleWrapper implements Wrapper, Pipeline, Lifecycle{
     }
 
     @Override
+    public void removeChild(Container child) {
+
+    }
+
+    @Override
+    public Container findChild(String name) {
+        return null;
+    }
+
+    @Override
+    public Container[] findChildren() {
+        return new Container[0];
+    }
+
+    @Override
     public void addMapper(Mapper mapper) {
 
+    }
+
+    @Override
+    public void removeMapper(Mapper mapper) {
+
+    }
+
+    @Override
+    public Mapper findMapper(String protocol) {
+        return null;
+    }
+
+    @Override
+    public Mapper[] findMappers() {
+        return new Mapper[0];
+    }
+
+    @Override
+    public Container map(Request request, boolean update) {
+        return null;
     }
 
     @Override
@@ -96,4 +158,8 @@ public class SimpleWrapper implements Wrapper, Pipeline, Lifecycle{
     }
 
 
+    @Override
+    public void invoke(Request request, Response response) throws IOException, ServletException {
+        pipeline.invoke(request, response);
+    }
 }

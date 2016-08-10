@@ -4,6 +4,8 @@ import org.apache.catalina.*;
 import org.apache.catalina.Container;
 import org.apache.catalina.util.LifecycleSupport;
 
+import javax.servlet.ServletException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,8 +33,12 @@ public class SimpleContext implements Context, Lifecycle, Pipeline {
         this.mappers = new HashMap();
         this.servletMappings = new HashMap();
         this.children = new HashMap();
+
+        this.pipeline.setBasic(new SimpleContextValue());
+
     }
 
+    // -----------------------------------------------------  Implements Lifecycle
     @Override
     public void start() throws LifecycleException {
 
@@ -69,6 +75,23 @@ public class SimpleContext implements Context, Lifecycle, Pipeline {
 
 
     @Override
+    public void addLifecycleListener(LifecycleListener listener) {
+        lifecycle.addLifecycleListener(listener);
+    }
+
+    @Override
+    public LifecycleListener[] findLifecycleListener() {
+        return new LifecycleListener[0];
+    }
+
+    @Override
+    public void removeLifecycleListener(LifecycleListener listener) {
+
+    }
+
+
+    // ----------------------------------------------------- Implements Context
+    @Override
     public void setName(String name) {
 
     }
@@ -89,9 +112,24 @@ public class SimpleContext implements Context, Lifecycle, Pipeline {
     }
 
     @Override
+    public void setParentClassLoader(ClassLoader parent) {
+
+    }
+
+    @Override
+    public ClassLoader getParentClassLoader() {
+        return null;
+    }
+
+    @Override
     public void addChild(Container child) {
         child.setParent(this);
         children.put(child.getName(), child);
+    }
+
+    @Override
+    public void removeChild(Container child) {
+
     }
 
     @Override
@@ -105,24 +143,30 @@ public class SimpleContext implements Context, Lifecycle, Pipeline {
     }
 
     @Override
-    public void addLifecycleListener(LifecycleListener listener) {
-        lifecycle.addLifecycleListener(listener);
-    }
-
-    @Override
-    public LifecycleListener[] findLifecycleListener() {
-        return new LifecycleListener[0];
-    }
-
-    @Override
-    public void removeLifecycleListener(LifecycleListener listener) {
-
-    }
-
-    @Override
     public void addMapper(Mapper mapper) {
         this.mapper = mapper;
     }
+
+    @Override
+    public void removeMapper(Mapper mapper) {
+
+    }
+
+    @Override
+    public Mapper findMapper(String protocol) {
+        return null;
+    }
+
+    @Override
+    public Mapper[] findMappers() {
+        return new Mapper[0];
+    }
+
+    @Override
+    public Container map(Request request, boolean update) {
+        return null;
+    }
+
 
     @Override
     public void addLoader(Loader loader) {
@@ -137,5 +181,11 @@ public class SimpleContext implements Context, Lifecycle, Pipeline {
     @Override
     public void addServletMapping(String pattern, String name) {
         servletMappings.put(pattern, name);
+    }
+
+
+    @Override
+    public void invoke(Request request, Response response) throws IOException, ServletException {
+        pipeline.invoke(request, response);
     }
 }
