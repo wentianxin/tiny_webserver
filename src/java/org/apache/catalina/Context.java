@@ -9,6 +9,11 @@ public interface Context extends Container{
 
     public Loader getLoader();
 
+
+
     public void addServletMapping(String pattern, String name);
 
+    public String findServletMapping(String pattern);
+
+    public String[] findServletMappings();
 }
