@@ -10,7 +10,18 @@ public interface Pipeline {
 
     // ------------------------------------------------------- Properties
 
+    public Value getBasic();
 
+    public void setBasic(Value value);
+
+    public Value[] getValues();
+
+    public void addValue(Value value);
+
+    public void removeValue(Value value);
+
+
+    // ------------------------------------------------------- Public Methods
 
     public void invoke(Request request, Response response) throws IOException, ServletException;
 }

@@ -5,7 +5,20 @@ package org.apache.catalina;
  */
 public interface Mapper {
 
+
+    // ------------------------------------------------------------- Properties
+
     public String getProtocol();
 
     public void setProtocol(String protocol);
+
+
+    public Container getContainer();
+
+    public void setContainer(Container container);
+
+
+    // --------------------------------------------------------- Public Methods
+
+    public Container map(Request request, boolean update);
 }
