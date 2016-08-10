@@ -1,7 +1,11 @@
 package org.apache.catalina.connector.http;
 
 import org.apache.catalina.*;
+import org.apache.catalina.net.DefaultServerSocketFactory;
+import org.apache.catalina.net.ServerSocketFactory;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 
 /**
@@ -9,7 +13,17 @@ import java.net.ServerSocket;
  */
 public class HttpConnector implements Connector, Lifecycle, Runnable{
 
+    private String address;
+
+    private int port;
+
+    private int acceptCount;
+
     private ServerSocket serverSocket;
+
+    private ServerSocketFactory factory;
+
+
 
     // ------------------------------------------------------- implements Connector
 
@@ -19,7 +33,12 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
      */
     @Override
     public void initialize() throws LifecycleException {
-        
+
+        try {
+            serverSocket = open();
+        } catch (IOException e) {
+            
+        }
     }
 
     @Override
@@ -66,4 +85,26 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
     }
 
 
+    private ServerSocket open() throws IOException {
+        ServerSocketFactory factory = getFactory();
+
+        if (address == null) {
+            return factory.createSocket(port, acceptCount);
+        }
+
+
+        InetAddress is = InetAddress.getByName(address);
+
+        return factory.createSocket(port, acceptCount, is);
+
+    }
+
+    private ServerSocketFactory getFactory() {
+
+        if (this.factory == null) {
+            this.factory = new DefaultServerSocketFactory();
+        }
+
+        return this.factory;
+    }
 }
