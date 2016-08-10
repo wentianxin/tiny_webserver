@@ -4,12 +4,11 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 
 /**
- * Created by tisong on 8/9/16.
+ * Created by tisong on 8/10/16.
  */
-public interface Value {
+public interface ValueContext {
 
     // -------------------------------------------------- Public Methods
 
-    public void invoke(Request request, Response response, ValueContext valueContext) throws IOException, ServletException;
+    public void invokeNext(Request request, Response response) throws IOException, ServletException;
 }
-

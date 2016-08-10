@@ -30,7 +30,6 @@ public interface Container {
     public void removeChild(Container child);
 
 
-
     public Container findChild(String name);
 
     public Container[] findChildren();
@@ -43,8 +42,8 @@ public interface Container {
 
     public Mapper[] findMappers();
 
-
     public Container map(Request request, boolean update);
+
 
     public void invoke(Request request, Response response) throws IOException, ServletException;
 
