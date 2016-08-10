@@ -14,16 +14,21 @@ public class SimpleWrapper implements Wrapper, Pipeline, Lifecycle{
 
     private Servlet servlet;
     private String  servletClass;
+
+    private Loader  loader;
+
     private String  name;
-    private boolean started;
+
     private Container parent;
     private Pipeline pipeline;
-    private Loader  loader;
+
     private LifecycleSupport lifecycle;
+
+    private boolean started;
 
 
     public SimpleWrapper() {
-        this.pipeline = new SimplePipeline();
+        this.pipeline = new SimplePipeline(this);
         this.pipeline.setBasic(new SimpleWrapperValue());
     }
 
@@ -159,7 +164,85 @@ public class SimpleWrapper implements Wrapper, Pipeline, Lifecycle{
 
 
     @Override
+    public Value getBasic() {
+        return  null;
+    }
+
+    @Override
+    public void setBasic(Value value) {
+
+    }
+
+    @Override
+    public Value[] getValues() {
+        return new Value[0];
+    }
+
+    @Override
+    public void addValue(Value value) {
+
+    }
+
+    @Override
+    public void removeValue(Value value) {
+
+    }
+
+
+    public Loader getLoader() {
+        return this.loader;
+    }
+
+    public void setLoader(Loader loader) {
+        this.loader = loader;
+    }
+
+    @Override
     public void invoke(Request request, Response response) throws IOException, ServletException {
         pipeline.invoke(request, response);
     }
+
+
+
+    public Servlet allocate() throws ServletException {
+
+        if (servlet == null) {
+            servlet = loadServlet();
+        }
+
+        return servlet;
+    }
+
+    private Servlet loadServlet() throws ServletException {
+
+        Loader loader = getLoader();
+
+        ClassLoader classLoader = loader.getClassLoader();
+
+        if (servletClass == null) {
+            throw new ServletException("servlet class has not been specified");
+        }
+
+        Class classClass = null;
+        try {
+            classClass = classLoader.loadClass(servletClass);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            servlet = (Servlet) classClass.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+
+        servlet.init(null);
+
+        return servlet;
+    }
+
+
 }
