@@ -8,14 +8,20 @@ import java.io.IOException;
 /**
  * Created by tisong on 8/9/16.
  */
-public class SimplePipeline implements Pipeline, Lifecycle{
+public class SimplePipeline implements Pipeline, Lifecycle, Contained{
 
     private Value   basic;
     private Value[] values = new Value[0];
+    private Container container;
 
 
+    public SimplePipeline(Container container) {
+        this.container = container;
+    }
 
     // -------------------------------------------------------------- Implements Lifecycle
+
+    // TODO synchronized
     @Override
     public void start() throws LifecycleException {
 
@@ -46,10 +52,49 @@ public class SimplePipeline implements Pipeline, Lifecycle{
 
 
     @Override
+    public Value getBasic() {
+        return this.basic;
+    }
+
+    @Override
+    public void setBasic(Value value) {
+        this.basic = value;
+    }
+
+    @Override
+    public Value[] getValues() {
+        return values;
+    }
+
+    @Override
+    public void addValue(Value value) {
+
+    }
+
+    @Override
+    public void removeValue(Value value) {
+
+    }
+
+    @Override
+    public Container getContainer() {
+        return this.container;
+    }
+
+    @Override
+    public void setContainer(Container container) {
+        this.container = container;
+    }
+
+
+    @Override
     public void invoke(Request request, Response response) throws IOException, ServletException {
 
         new StandardPipelineValueContext().invokeNext(request, response);
     }
+
+
+
 
     class StandardPipelineValueContext implements ValueContext {
         private int stage = 0;

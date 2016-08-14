@@ -10,6 +10,26 @@ import org.apache.catalina.Loader;
  */
 
 public class SimpleLoader implements Loader, Lifecycle{
+
+    private ClassLoader classLoader;
+
+
+    public SimpleLoader() {
+
+
+    }
+
+    // ------------------------------------------------------- Implements Loader
+
+    @Override
+    public ClassLoader getClassLoader() {
+        return null;
+    }
+
+
+    // ------------------------------------------------------- Implements Lifecycle
+
+
     @Override
     public void start() throws LifecycleException {
         System.out.println("Starting SimpleLoader");
@@ -34,4 +54,6 @@ public class SimpleLoader implements Loader, Lifecycle{
     public void removeLifecycleListener(LifecycleListener listener) {
 
     }
+
+
 }
