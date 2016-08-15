@@ -19,7 +19,7 @@ public class HttpProcessor implements Lifecycle, Runnable{
 
     private int id;
 
-    private HttpConnector httpConnector;
+    private HttpConnector connector;
 
     private LifecycleSupport lifecycle;
 
@@ -29,8 +29,8 @@ public class HttpProcessor implements Lifecycle, Runnable{
 
     private String threadName;
 
-    public HttpProcessor(HttpConnector httpConnector, int id) {
-        this.httpConnector = httpConnector;
+    public HttpProcessor(HttpConnector connector, int id) {
+        this.connector = connector;
         this.id = id;
     }
 
@@ -130,7 +130,7 @@ public class HttpProcessor implements Lifecycle, Runnable{
 
             ((HttpServletResponse)response.getReponse()).setHeader("Date", FastHttpDateFormat.getCurrentDate());
 
-            conenctor.getContainer().invoke(request, response);
+            connector.getContainer().invoke(request, response);
 
             if (finishResponse) {
                 response.finishResponse();

@@ -5,7 +5,11 @@ import org.apache.catalina.connector.http.HttpConnector;
 import org.tisong.proj4.core.*;
 
 /**
- * Created by tisong on 8/9/16.
+ * Context-Wrapper
+ *      Connetcor - 连接器
+ *      Mapper    - 协议
+ *      Loader    - 类加载器
+ *      LifecycleListener - 生命周期监听器
  */
 public class Bootstrap {
 
@@ -36,9 +40,10 @@ public class Bootstrap {
         context.addServletMapping("/Modern", "Modern");
 
 
-        //connector.addContainer(context);
+        connector.setContainer(context);
 
         try {
+            /* 初始化连接器 组件 */
             connector.initialize();
 
             ((Lifecycle) connector).start();
