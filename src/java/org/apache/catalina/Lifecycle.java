@@ -5,6 +5,12 @@ package org.apache.catalina;
  */
 public interface Lifecycle {
 
+    public static final String BEFORE_INIT_EVENT = "before_init";
+
+    public static final String AFTER_INIT_EVENT = "after_init";
+
+
+
     public static final String START_EVENT = "start";
 
     public static final String BEFORE_START_EVENT = "before_start";
@@ -18,14 +24,33 @@ public interface Lifecycle {
     public static final String AFTER_STOP_EVENT = "after_stop";
 
 
+    public static final String BEFORE_DESTROY_EVENT = "before_destroy";
+
+    public static final String AFTER_DESTROY_EVENT = "after_destroy";
+
+
+    public static final String CONFIGURE_START_EVENT = "configure_start";
+
+    public static final String CONFIGURE_STOP_EVENT = "configure_stop";
+
+
+    public void init() throws LifecycleException;
 
     public void start() throws LifecycleException;
 
     public void stop() throws LifecycleException;
+
+    public void destory() throws LifecycleException;
+
 
     public void addLifecycleListener(LifecycleListener listener);
 
     public LifecycleListener[] findLifecycleListener();
 
     public void removeLifecycleListener(LifecycleListener listener);
+
+
+    public LifecycleState getState();
+
+    public String getStateName();
 }
