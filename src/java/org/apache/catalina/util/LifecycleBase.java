@@ -12,14 +12,26 @@ public abstract class LifecycleBase implements Lifecycle{
 
     private LifecycleSupport lifecycle = new LifecycleSupport(this);
 
-    private volatile LifecycleState stat = LifecycleState.NEW;
+    private volatile LifecycleState state = LifecycleState.NEW;
 
 
     @Override
-    public final synchronized void init() throws LifecycleException{
+    public final void init() throws LifecycleException{
 
-        initInternal();
+        if (!state.equals(LifecycleState.NEW)) {
+            invalidTransition(Lifecycle.BEFORE_INIT_EVENT);
+        }
 
+        setStateInternal(LifecycleState.INITIALIZING, null, false);
+
+        try {
+            initInternal();
+        } catch (Throwable t) {
+            setStateInternal(LifecycleState.FAILED, null, false);
+            throw new LifecycleException("");
+        }
+
+        setStateInternal(LifecycleState.INITIALIZED, null, false);
     }
 
 
@@ -38,7 +50,12 @@ public abstract class LifecycleBase implements Lifecycle{
         setStateInternal(state, null,  true);
     }
 
-
+    /**
+     * 设置生命周期的当前状态, 并触发事件
+     * @param state
+     * @param data
+     * @param check
+     */
     private void setStateInternal(LifecycleState state, Object data, boolean check) {
 
 

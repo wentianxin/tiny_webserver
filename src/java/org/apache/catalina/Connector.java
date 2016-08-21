@@ -1,11 +1,12 @@
 package org.apache.catalina;
 
 import org.apache.catalina.net.ServerSocketFactory;
+import org.apache.catalina.util.LifecycleMBeanBase;
 
 /**
  * Created by tisong on 8/9/16.
  */
-public interface Connector {
+public interface Connector extends LifecycleMBeanBase{
 
 
     // ------------------------------------------------ Properties

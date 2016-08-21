@@ -15,6 +15,10 @@ public class StandardServer extends LifecycleMBeanBase implements Server {
 
     @Override
     public void initInternal() throws LifecycleException {
+
+        super.initInternal();
+
+
         for (int i = 0; i < services.length; i++) {
             services[i].init();
         }

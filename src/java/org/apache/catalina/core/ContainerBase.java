@@ -9,15 +9,20 @@ import org.apache.catalina.util.LifecycleMBeanBase;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by tisong on 8/18/16.
  */
 public abstract class ContainerBase extends LifecycleMBeanBase implements Container{
 
+    /**
+     * 一个容器处理start 和 stop事件的可用线程数
+     * 1. startStopThreads > 0 : startStopThreads
+     * 2. startStopThreads = 0 : JVM 可用线程数
+     * 3. startStopThreads < 0 : JVM 可用线程数 + startStopThreads
+     */
     private int startStopThreads = 1;
     private ThreadPoolExecutor startStopExecutor;
 
@@ -28,6 +33,16 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
     @Override
     protected void initInternal() throws LifecycleException {
 
+        BlockingQueue<Runnable> startStopQueue =
+                new LinkedBlockingQueue<Runnable>();
+
+        startStopExecutor = new ThreadPoolExecutor(
+                getStartStopThreadsInternal(),
+                getStartStopThreadsInternal(), 10, TimeUnit.SECONDS,
+                startStopQueue,
+                new StartStopThreadFactory(getName() + "-startStop-"));
+
+        startStopExecutor.allowCoreThreadTimeOut(true);
 
         super.initInternal();
     }
@@ -90,5 +105,49 @@ public abstract class ContainerBase extends LifecycleMBeanBase implements Contai
         }
 
         fireContainerEvent(ADD_CHILD_EVENT, child);
+    }
+
+    @Override
+    public int getStartStopThreads() {
+        return startStopThreads;
+    }
+
+    private int getStartStopThreadsInternal() {
+
+        int result = getStartStopThreads();
+        if (result > 0) {
+            return result;
+        }
+
+        result = Runtime.getRuntime().availableProcessors() + result;
+        if (result < 1) {
+            return 1;
+        }
+
+        return result;
+
+    }
+
+    private static class StartStopThreadFactory implements ThreadFactory {
+
+        private final ThreadGroup group;
+
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+        private final String namePrefix;
+
+        public StartStopThreadFactory(String namePrefix) {
+            SecurityManager s = System.getSecurityManager();
+
+            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+
+            this.namePrefix = namePrefix;
+        }
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(group, r, namePrefix + threadNumber.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
+        }
     }
 }

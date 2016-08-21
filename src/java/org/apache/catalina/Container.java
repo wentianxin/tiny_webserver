@@ -6,7 +6,7 @@ import java.io.IOException;
 /**
  * Created by tisong on 8/9/16.
  */
-public interface Container {
+public interface Container extends Lifecycle{
 
     // -------------------------------------------------------- Properties
 

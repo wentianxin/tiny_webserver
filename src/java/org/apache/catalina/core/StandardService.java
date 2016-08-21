@@ -1,27 +1,46 @@
 package org.apache.catalina.core;
 
-import org.apache.catalina.Connector;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.Service;
+import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleMBeanBase;
 
-import java.util.concurrent.Executor;
+import java.util.ArrayList;
 
 /**
  * Created by tisong on 8/17/16.
  */
 public class StandardService extends LifecycleMBeanBase implements Service {
 
+    /**
+     * Service 是与容器的交界处
+     */
+    private Container container = null;
 
+
+    private ArrayList<Executor> executors = new ArrayList<Executor>();
+
+    private Connector[] connectors = new Connector[0];
+    
+    /**
+     * 初始化容器; 初始化线程池; 初始化连接器
+     * @throws LifecycleException
+     */
     @Override
     public void initInternal() throws LifecycleException {
         super.initInternal();
 
-        container.init();
+        if (container != null) {
+            container.init();
+        }
 
-        executor.init();
+        for (Executor executor: findExecutors()) {
+            // TODO setDomain
+            executor.init();
+        }
 
-        connector.init();
+        // TODO synchronized
+        for (Connector connector: connectors) {
+            connector.init();
+        }
     }
 
     @Override
