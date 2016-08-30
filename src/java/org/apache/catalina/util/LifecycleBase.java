@@ -9,9 +9,12 @@ import org.apache.catalina.LifecycleState;
  */
 public abstract class LifecycleBase implements Lifecycle{
 
+    private static StringManager sm =
+            StringManager.getManager("org.apache.catalina.util");
 
     private LifecycleSupport lifecycle = new LifecycleSupport(this);
 
+    // TODO
     private volatile LifecycleState state = LifecycleState.NEW;
 
 
@@ -40,8 +43,15 @@ public abstract class LifecycleBase implements Lifecycle{
     @Override
     public final synchronized void start() throws LifecycleException {
 
+        if (state.equals(LifecycleState.NEW)) {
+            init();
+        }
+
+        setStateInternal(LifecycleState.STARTING_PREP, null, false);
 
         startInternal();
+
+        setStateInternal(LifecycleState.STARTED, null, false);
     }
 
     protected abstract void startInternal() throws LifecycleException;
@@ -56,7 +66,7 @@ public abstract class LifecycleBase implements Lifecycle{
      * @param data
      * @param check
      */
-    private void setStateInternal(LifecycleState state, Object data, boolean check) {
+    protected void setStateInternal(LifecycleState state, Object data, boolean check) {
 
 
         if (check) {
@@ -71,7 +81,14 @@ public abstract class LifecycleBase implements Lifecycle{
         }
     }
 
+
     protected void fireLifecycleEvent(String type, Object data) {
         lifecycle.fireLifecycleEvent(type, data);
+    }
+
+    private void invalidTransition(String type) throws LifecycleException {
+        String msg = sm.getString("lifecycleBase.invalidTransition", type,
+                toString(), state);
+        throw new LifecycleException(msg);
     }
 }

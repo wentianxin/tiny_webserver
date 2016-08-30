@@ -4,6 +4,7 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.coyote.Adapter;
 import org.apache.coyote.ProtocolHandler;
+import org.apache.tomcat.util.http.mapper.Mapper;
 
 /**
  * Created by tisong on 8/21/16.
@@ -11,9 +12,13 @@ import org.apache.coyote.ProtocolHandler;
 public class Connector extends LifecycleMBeanBase{
 
 
-    private Adapter adapter = null;
+    protected Adapter adapter = null;
 
     private ProtocolHandler protocolHandler = null;
+
+    protected Mapper mapper = new Mapper();
+
+    protected MapperListener mapperListener = new MapperListener(mapper, this);
 
 
     @Override
@@ -26,11 +31,11 @@ public class Connector extends LifecycleMBeanBase{
 
 
         try {
-            protocolHandler.init();
+            protocolHandler.init();  // Http11Protocol create ServerSocket object
         } catch (Exception e) {
 
         }
 
-        mapperListener.init();
+        mapperListener.init(); // just register JMX
     }
 }
