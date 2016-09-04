@@ -1,5 +1,6 @@
 package org.apache.catalina.util;
 
+import org.apache.catalina.Container;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleListener;
 
@@ -11,6 +12,12 @@ public final class LifecycleSupport {
     private Lifecycle lifecycle;
 
     private LifecycleListener[] listeners = new LifecycleListener[0];
+
+
+    public LifecycleSupport(Lifecycle lifecycle) {
+        this.lifecycle = lifecycle;
+    }
+
 
 
     public void addLifecycleListener(LifecycleListener listener) {

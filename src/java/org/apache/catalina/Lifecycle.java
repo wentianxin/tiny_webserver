@@ -25,7 +25,5 @@ public interface Lifecycle {
 
     public void addLifecycleListener(LifecycleListener listener);
 
-    public LifecycleListener[] findLifecycleListener();
-
     public void removeLifecycleListener(LifecycleListener listener);
 }
