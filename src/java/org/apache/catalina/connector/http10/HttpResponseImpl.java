@@ -3,9 +3,9 @@ package org.apache.catalina.connector.http10;
 import org.apache.catalina.connector.HttpResponseBase;
 
 /**
- * Created by tisong on 9/3/16.
+ * Created by tisong on 9/4/16.
  */
-public class HttpResponseImpl extends HttpResponseBase{
+public final class HttpResponseImpl extends HttpResponseBase{
 
 
 

@@ -10,47 +10,34 @@ import java.io.OutputStream;
  */
 public interface Response {
 
+    // ------------------------------------ Properties
 
+    public Connector getConnector();
+    public void setConnector();
 
+    public void setError();
+    public boolean isError();
 
-
-
-
-
-
-
-
+    /**
+     * 关联的 Request对象
+     */
     public Request getRequest();
-
-
     public void setRequest(Request request);
-
 
 
     public ServletResponse getResponse();
 
 
     public OutputStream getStream();
+    public void setSream(OutputStream stream);
 
 
-    public void setStream(OutputStream output);
-
-
-
-    // --------------------------------------------------------- Public Methods
+    // ---------------------------
 
     public ServletOutputStream createOutputStream() throws IOException;
 
-
-    public void finshResponse() throws IOException;
-
-
-    public int getContextLength();
+    public void finishResponse() throws IOException;
 
 
-
-    public String getContentType();
-
-
-
+    public void recycle();
 }
