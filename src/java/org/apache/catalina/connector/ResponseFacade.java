@@ -1,4 +1,4 @@
-package org.apache.catalina.connector.http10;
+package org.apache.catalina.connector;
 
 import org.apache.catalina.Response;
 
@@ -9,18 +9,18 @@ import java.io.PrintWriter;
 import java.util.Locale;
 
 /**
- * Created by tisong on 9/3/16.
+ * Created by tisong on 9/4/16.
  */
 public class ResponseFacade implements ServletResponse{
 
-    protected ServletResponse response = null;
+    private Response resp = null;  // 辅助性
+
+    private ServletResponse response = null;
 
     public ResponseFacade(Response response) {
-
-        this.response = (ServletResponse)response;
+        this.resp = response;
+        this.response = (ServletResponse) response;
     }
-
-
 
     @Override
     public String getCharacterEncoding() {
@@ -43,22 +43,22 @@ public class ResponseFacade implements ServletResponse{
     }
 
     @Override
-    public void setCharacterEncoding(String s) {
+    public void setCharacterEncoding(String charset) {
 
     }
 
     @Override
-    public void setContentLength(int i) {
+    public void setContentLength(int len) {
 
     }
 
     @Override
-    public void setContentType(String s) {
+    public void setContentType(String type) {
 
     }
 
     @Override
-    public void setBufferSize(int i) {
+    public void setBufferSize(int size) {
 
     }
 
@@ -88,7 +88,7 @@ public class ResponseFacade implements ServletResponse{
     }
 
     @Override
-    public void setLocale(Locale locale) {
+    public void setLocale(Locale loc) {
 
     }
 
