@@ -17,17 +17,21 @@ import java.util.Queue;
 import java.util.Stack;
 
 /**
+ * 连接器: 创建ServerSocket 接收Socket, 分发给HttpProcessor线程处理
  * Created by tisong on 9/2/16.
  */
 public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     private StringManager sm = StringManager.getManager(Constants.Package);
 
-    private int port = 8080;
+    /**
+     * 服务器绑定的信息
+     */
+    private int port = 8080;        // 端口号
 
-    private String scheme = "http";
+    private String scheme = "http"; // 协议
 
-    private String address = null;
+    private String address = null;  // 地址; null: 绑定所有地址;
 
     /**
      * 连接器接收的 tcp 最大连接数
@@ -35,10 +39,14 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
     private int acceptCount;
 
 
-
     private ServerSocketFactory factory = null;
 
     private ServerSocket serverSocket = null;
+
+    /**
+     * Socket输入流接收的缓冲区大小
+     */
+    private int bufferSize = 2048;
 
 
     private LifecycleSupport lifecycleSupport = new LifecycleSupport(this);
@@ -48,9 +56,8 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     private boolean started = false;
 
-    private boolean running = false;
-
     private boolean stopped = false;
+
 
     /**
      * 后台线程: 接收 socket, 并分发给 <code>HttpProcessor</code>
@@ -59,6 +66,9 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     private String threadName = null;
 
+    private Object threadSyc = new Object();
+
+
     /**
      * HttpProcessor 缓冲池
      */
@@ -66,11 +76,11 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     private List<HttpProcessor> createdProcessors = new ArrayList<HttpProcessor>();
 
-    private int minProcessors = 10;
+    private int minProcessors = 10;  // 启动时创建HttpProcessor数量
 
-    private int maxProcessors = 50;
+    private int maxProcessors = 50;  // 最大HttpProcessor数量
 
-    private int curProcessors = 0;
+    private int curProcessors = 0;   // 当前已创建HttpProcessor数量
 
 
 
@@ -129,19 +139,24 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
         try {
             serverSocket = openServerSocket();
         } catch (IOException e) {
-
+            throw new LifecycleException(threadName + ".open", e);
         }
     }
 
 
     @Override
     public Request createRequest() {
-        return null;
+
+        HttpRequestImpl request = new HttpRequestImpl();
+        request.setConnector(this);
+        return request;
     }
 
     @Override
     public Response createResponse() {
-        return null;
+        HttpResponseImpl response = new HttpResponseImpl();
+        response.setConnector(this);
+        return response;
     }
 
 
@@ -159,25 +174,37 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
         threadName = "HttpConnector[" + port + "]";
 
-        backgroundThread = new Thread(this, threadName);
-        backgroundThread.setDaemon(true);
-        backgroundThread.start();
+        lifecycleSupport.fireLifecycleEvent(START_EVENT, null);
 
-        for (; curProcessors < minProcessors; curProcessors++) {
+        started = true;
 
+        threadStart();
 
+        while (curProcessors < minProcessors) {
+            if ((maxProcessors > 0) && (curProcessors >= maxProcessors))
+                break;
+            createProcessor();
         }
     }
 
     @Override
     public void stop() throws LifecycleException {
+        if (!started) {
+
+        }
+
+        lifecycleSupport.fireLifecycleEvent(STOP_EVENT, null);
+
+        started = false;
 
         for (HttpProcessor processor: createdProcessors) {
 
-            try {
-                ((Lifecycle) processor).stop();
-            } catch (LifecycleException e) {
+            if (processor instanceof Lifecycle) {
+                try {
+                    ((Lifecycle) processor).stop();
+                } catch (LifecycleException e) {
 
+                }
             }
 
             if (serverSocket != null) {
@@ -188,25 +215,19 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
                 }
                 serverSocket = null;
             }
-
         }
 
-
+        threadStop();
     }
 
     @Override
     public void addLifecycleListener(LifecycleListener listener) {
-
-    }
-
-    @Override
-    public LifecycleListener[] findLifecycleListener() {
-        return new LifecycleListener[0];
+        lifecycleSupport.addLifecycleListener(listener);
     }
 
     @Override
     public void removeLifecycleListener(LifecycleListener listener) {
-
+        lifecycleSupport.removeLifecycleListener(listener);
     }
 
 
@@ -218,24 +239,27 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
         while (!stopped) {
 
             Socket socket = null;
-
             try {
                 socket = serverSocket.accept();
             } catch (IOException e) {
-                e.printStackTrace();
+
             }
 
             HttpProcessor httpProcessor = alloateProcessor();
             if (httpProcessor == null) {
-
                 try {
                     socket.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+
                 }
+                continue;
             }
 
             httpProcessor.assign(socket);
+        }
+
+        synchronized (threadSyc) {
+            threadSyc.notifyAll();
         }
     }
 
@@ -272,14 +296,16 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     private HttpProcessor alloateProcessor() {
 
-        if (processors.size() > 0) {
-            return processors.pop();
-        } else {
-
-            if (curProcessors < maxProcessors) {
-                return createProcessor();
+        synchronized (processors) {
+            if (processors.size() > 0) {
+                return processors.pop();
             } else {
-                return null;
+
+                if (curProcessors < maxProcessors) {
+                    return createProcessor();
+                } else {
+                    return null;
+                }
             }
         }
 
@@ -294,6 +320,7 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
                 ((Lifecycle) processor).start();
             } catch (LifecycleException e) {
 
+                return null;
             }
         }
         createdProcessors.add(processor);
@@ -305,10 +332,26 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
 
 
+    private void threadStart() {
+
+        backgroundThread = new Thread(this, threadName);
+        backgroundThread.setDaemon(true);
+        backgroundThread.start();
+    }
+
     private void threadStop() {
 
         stopped = true;
 
+        synchronized (threadSyc) {
+            try {
+                threadSyc.wait(5000);
+            } catch (InterruptedException e) {
+
+            }
+        }
+
+        backgroundThread = null;
     }
     // -----------------------------------
 
