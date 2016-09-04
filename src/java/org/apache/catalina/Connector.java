@@ -19,6 +19,13 @@ public interface Connector {
 
     public void setFactory(ServerSocketFactory factory);
 
+    public String getScheme();
+
+    public void setScheme(String scheme);
+
+
+    public String getInfo();
+
     // ------------------------------------------------ Public Methods
 
     public void initialize() throws LifecycleException;
