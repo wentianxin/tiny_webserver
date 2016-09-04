@@ -1,6 +1,6 @@
 package org.apache.catalina.connector;
 
-import org.apache.catalina.Request;
+import org.apache.catalina.HttpRequest;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
@@ -16,17 +16,17 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Created by tisong on 9/3/16.
+ * Created by tisong on 9/4/16.
  */
-public class HttpRequestFacade extends RequestFacade
+public class HttpRequestFacade
+    extends RequestFacade
     implements HttpServletRequest{
 
-    public HttpRequestFacade(Request request) {
+    public HttpRequestFacade(HttpRequest request) {
         super(request);
     }
 
 
-    // -------------------------------------------------- implements HttpServletRequest
 
     @Override
     public String getAuthType() {
@@ -39,17 +39,17 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public long getDateHeader(String s) {
+    public long getDateHeader(String name) {
         return 0;
     }
 
     @Override
-    public String getHeader(String s) {
+    public String getHeader(String name) {
         return null;
     }
 
     @Override
-    public Enumeration getHeaders(String s) {
+    public Enumeration getHeaders(String name) {
         return null;
     }
 
@@ -59,7 +59,7 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public int getIntHeader(String s) {
+    public int getIntHeader(String name) {
         return 0;
     }
 
@@ -94,7 +94,7 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public boolean isUserInRole(String s) {
+    public boolean isUserInRole(String role) {
         return false;
     }
 
@@ -124,7 +124,7 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public HttpSession getSession(boolean b) {
+    public HttpSession getSession(boolean create) {
         return null;
     }
 
@@ -154,7 +154,7 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public Object getAttribute(String s) {
+    public Object getAttribute(String name) {
         return null;
     }
 
@@ -169,7 +169,7 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public void setCharacterEncoding(String s) throws UnsupportedEncodingException {
+    public void setCharacterEncoding(String env) throws UnsupportedEncodingException {
 
     }
 
@@ -189,7 +189,7 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public String getParameter(String s) {
+    public String getParameter(String name) {
         return null;
     }
 
@@ -199,7 +199,7 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public String[] getParameterValues(String s) {
+    public String[] getParameterValues(String name) {
         return new String[0];
     }
 
@@ -244,12 +244,12 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public void setAttribute(String s, Object o) {
+    public void setAttribute(String name, Object o) {
 
     }
 
     @Override
-    public void removeAttribute(String s) {
+    public void removeAttribute(String name) {
 
     }
 
@@ -269,12 +269,12 @@ public class HttpRequestFacade extends RequestFacade
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(String s) {
+    public RequestDispatcher getRequestDispatcher(String path) {
         return null;
     }
 
     @Override
-    public String getRealPath(String s) {
+    public String getRealPath(String path) {
         return null;
     }
 

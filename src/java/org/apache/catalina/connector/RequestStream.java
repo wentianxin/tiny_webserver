@@ -6,14 +6,13 @@ import javax.servlet.ServletInputStream;
 import java.io.IOException;
 
 /**
- * Created by tisong on 9/3/16.
+ * Created by tisong on 9/4/16.
  */
 public class RequestStream extends ServletInputStream{
 
-
     public RequestStream(Request request) {
-
-
+        super();
+        
     }
 
     @Override

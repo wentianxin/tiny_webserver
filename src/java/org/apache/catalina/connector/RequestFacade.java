@@ -13,7 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Created by tisong on 9/3/16.
+ * Created by tisong on 9/4/16.
  */
 public class RequestFacade implements ServletRequest{
 
@@ -21,14 +21,13 @@ public class RequestFacade implements ServletRequest{
 
 
     public RequestFacade(Request request) {
-
         this.request = (ServletRequest) request;
     }
 
-    // ------------------------------------------  implements ServletRequest
+
 
     @Override
-    public Object getAttribute(String s) {
+    public Object getAttribute(String name) {
         return null;
     }
 
@@ -43,7 +42,7 @@ public class RequestFacade implements ServletRequest{
     }
 
     @Override
-    public void setCharacterEncoding(String s) throws UnsupportedEncodingException {
+    public void setCharacterEncoding(String env) throws UnsupportedEncodingException {
 
     }
 
@@ -63,7 +62,7 @@ public class RequestFacade implements ServletRequest{
     }
 
     @Override
-    public String getParameter(String s) {
+    public String getParameter(String name) {
         return null;
     }
 
@@ -73,7 +72,7 @@ public class RequestFacade implements ServletRequest{
     }
 
     @Override
-    public String[] getParameterValues(String s) {
+    public String[] getParameterValues(String name) {
         return new String[0];
     }
 
@@ -118,12 +117,12 @@ public class RequestFacade implements ServletRequest{
     }
 
     @Override
-    public void setAttribute(String s, Object o) {
+    public void setAttribute(String name, Object o) {
 
     }
 
     @Override
-    public void removeAttribute(String s) {
+    public void removeAttribute(String name) {
 
     }
 
@@ -143,12 +142,12 @@ public class RequestFacade implements ServletRequest{
     }
 
     @Override
-    public RequestDispatcher getRequestDispatcher(String s) {
+    public RequestDispatcher getRequestDispatcher(String path) {
         return null;
     }
 
     @Override
-    public String getRealPath(String s) {
+    public String getRealPath(String path) {
         return null;
     }
 
