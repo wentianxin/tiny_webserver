@@ -4,6 +4,14 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 
 /**
+ * <ul>
+ * 容器相关组件
+ * <li>加载器<code>Loader</code></li>
+ * <li>Session管理器<code>Manage</code></li>
+ * <li><code>Mapper</code></li>
+ * <li>子容器</li>
+ * <li>流水线<code>Pipeline</code></li>
+ * </ul>
  * Created by tisong on 8/9/16.
  */
 public interface Container {
@@ -17,6 +25,16 @@ public interface Container {
     public void setParent(Container container);
 
     public Container getParent();
+
+
+    public Manager getManager();
+
+    public void setManager(Manager manager);
+
+    public Loader getLoader();
+
+    public void setLoader(Loader loader);
+
 
     public void setParentClassLoader(ClassLoader parent);
 
