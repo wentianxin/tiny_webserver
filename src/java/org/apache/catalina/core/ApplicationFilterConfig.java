@@ -1,8 +1,12 @@
 package org.apache.catalina.core;
 
+import org.apache.catalina.Context;
+import org.apache.catalina.deploy.FilterDef;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import java.util.Enumeration;
 
 /**
@@ -10,16 +14,20 @@ import java.util.Enumeration;
  */
 public class ApplicationFilterConfig implements FilterConfig {
 
+    private Context context = null;
+
     private Filter filter = null;
+
+    private FilterDef filterDef = null;
 
     @Override
     public String getFilterName() {
-        return null;
+        return filterDef.getFilterName();
     }
 
     @Override
     public ServletContext getServletContext() {
-        return null;
+        return this.context.getServletContext();
     }
 
     @Override
@@ -33,13 +41,29 @@ public class ApplicationFilterConfig implements FilterConfig {
     }
 
 
-    public Filter getFilter() {
+    public Filter getFilter() throws ClassNotFoundException,
+            IllegalAccessException, InstantiationException, ServletException {
 
         if (this.filter != null) {
             return this.filter;
         }
 
+        String filterClass = filterDef.getFilterClass();
+        ClassLoader classLoader = null;
+        // TODO 为什么要这样区分
+        if (filterClass.startsWith("org.apache.catalina.")) {
+            classLoader = this.getClass().getClassLoader();
+        } else {
+            classLoader = context.getLoader().getClassLoader();
+        }
 
+        Class clazz = classLoader.loadClass(filterClass);
+
+        this.filter = (Filter) clazz.newInstance();
+
+        filter.init(this);
+
+        return filter;
     }
 
 }
