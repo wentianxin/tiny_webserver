@@ -4,6 +4,7 @@ import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleSupport;
 import org.apache.catalina.util.StringManager;
 
+import javax.naming.directory.DirContext;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ public class ContainerBase
 
     protected Map<String, Mapper> mappers = new HashMap<String, Mapper>();
 
+    protected Map<String, Container> children = new HashMap<String, Container>();
 
     protected Container parent = null;  // 可能会用到 parent loader
 
@@ -44,17 +46,27 @@ public class ContainerBase
     protected LifecycleSupport lifecycleSupport = new LifecycleSupport(this);
 
 
+    protected DirContext resources = null;
+
     protected boolean started = false;
-    
+
 
     @Override
     public void setName(String name) {
-
+        this.name = name;
     }
 
     @Override
     public String getName() {
-        return null;
+        return this.name;
+    }
+
+    public void setResources(DirContext resources) {
+        this.resources = resources;
+    }
+
+    public DirContext getResources() {
+        return resources;
     }
 
     @Override
@@ -69,12 +81,27 @@ public class ContainerBase
 
     @Override
     public void setParentClassLoader(ClassLoader parent) {
-
+        this.parentClassLoader = parent;
     }
 
     @Override
     public ClassLoader getParentClassLoader() {
+        return this.parentClassLoader;
+    }
+
+
+    @Override
+    public Manager getManager() {
+        if (manager != null)
+            return manager;
+        if (parent != null)
+            return parent.getManager();
         return null;
+    }
+
+    @Override
+    public void setManager(Manager manager) {
+
     }
 
     @Override
@@ -97,31 +124,80 @@ public class ContainerBase
     @Override
     public void addChild(Container child) {
 
+        child.setParent(this);
+
+        children.put(child.getName(), child);
+
+        // TODO fireContainerEvent(ADD_CHILD_EVENT, child);
     }
 
     @Override
     public void removeChild(Container child) {
 
+        children.remove(child.getName());
+
+        child.setParent(null);
+
+        // TODO fireContainerEvent(REMOVE_CHILD_EVENT, child);
     }
 
     @Override
     public Container findChild(String name) {
-        return null;
+
+        // TODO 需要锁住 children?
+        if (name == null || children == null) {
+            return null;
+        }
+
+        return children.get(name);
     }
 
     @Override
     public Container[] findChildren() {
-        return new Container[0];
+
+        if (children == null) {
+            return null;
+        }
+
+        Container[] c = new Container[children.size()];
+
+        return children.values().toArray(c);
     }
 
     @Override
     public void addMapper(Mapper mapper) {
 
+        synchronized (mappers) {
+
+            mapper.setContainer(this);
+
+            mappers.put(mapper.getProtocol(), mapper);
+
+            this.mapper = (mappers.size() == 1) ? mapper : null;
+
+            // TODO fireContainerEvent(ADD_MAPPER_EVENT, null);
+        }
     }
 
     @Override
     public void removeMapper(Mapper mapper) {
 
+        if (mappers.get(mapper.getProtocol()) == null) {
+            return ;
+        }
+
+        synchronized (mappers) {
+            mapper.setContainer(null);
+
+            mappers.remove(mapper.getProtocol());
+
+
+            this.mapper = ( ( mappers.size() == 1) ?
+                            ( mappers.values().iterator().next()) :
+                            ( null) );
+
+            // TODO fireContainerEvent(REMOVE_MAPPER_EVENT, mapper);
+        }
     }
 
     @Override
@@ -136,6 +212,9 @@ public class ContainerBase
 
     @Override
     public Mapper[] findMappers() {
+        if (mappers == null) {
+            return null;
+        }
 
         // Map to Array
         Mapper[] m = new Mapper[mappers.size()];
@@ -158,34 +237,36 @@ public class ContainerBase
 
 
     // ----------------------------------------- implements Pipeline
+
     @Override
     public Value getBasic() {
-        return null;
+        return pipeline.getBasic();
     }
 
     @Override
     public void setBasic(Value value) {
-
+        pipeline.setBasic(value);
     }
+
 
     @Override
     public Value[] getValues() {
-        return new Value[0];
+        return pipeline.getValues();
     }
 
     @Override
     public void addValue(Value value) {
-
+        pipeline.addValue(value);
     }
 
     @Override
     public void removeValue(Value value) {
-
+        pipeline.removeValue(value);
     }
+
 
     @Override
     public void invoke(Request request, Response response) throws IOException, ServletException {
-
         pipeline.invoke(request, response);
     }
 
@@ -290,15 +371,16 @@ public class ContainerBase
         }
     }
 
+
     @Override
     public void addLifecycleListener(LifecycleListener listener) {
-
+        lifecycleSupport.addLifecycleListener(listener);
     }
 
 
     @Override
     public void removeLifecycleListener(LifecycleListener listener) {
-
+        lifecycleSupport.removeLifecycleListener(listener);
     }
 
 
