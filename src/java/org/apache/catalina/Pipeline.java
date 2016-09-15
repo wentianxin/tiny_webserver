@@ -4,6 +4,9 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 
 /**
+ * 流水线组件
+ * 最后的阀门 Basic
+ *
  * Created by tisong on 8/9/16.
  */
 public interface Pipeline {
@@ -13,6 +16,7 @@ public interface Pipeline {
     public Value getBasic();
 
     public void setBasic(Value value);
+
 
     public Value[] getValues();
 
