@@ -22,22 +22,20 @@ public class EngineRuleSet extends RuleSetBase{
     public void addRuleInstances(Digester digester) {
 
         /**
-         * 创建 Engine 对象;
-         * 增加默认监听器: EngineConfig;
-         * 将 Engine 与父类 Service关联
+         * Engine 实例化
          */
         digester.addObjectCreate(prefix + "Engine",
                                  "org.apache.catalina.core.StandardEngine",
                                  "className");
         digester.addSetProperties(prefix + "Engine");
-        digester.addRule(prefix + "Engine",
-                         new LifecycleListenerRule(digester,
-                                                   "org.apache.catalina.core.startup.EngineConfig",
-                                                    "engineConfigClass"));
-        /* 调用的是Service的 setContainer方法; 将 Service 与 Engine关联起来 */
         digester.addSetNext(prefix + "Engine",
                             "setContainer",
                             "org.apache.catalina.Container");
+
+        digester.addRule(prefix + "Engine", new LifecycleListenerRule(digester,
+                        "org.apache.catalina.startup.EngineConfig",
+                        "engineConfigClass"));
+
 
         /**
          * 增加 Listener 规则
@@ -51,7 +49,37 @@ public class EngineRuleSet extends RuleSetBase{
                             "org.apache.catalina.LifecycleListener");
 
 
+        /**
+         * 增加 Loader 规则
+         */
+        digester.addObjectCreate(prefix + "Engine/Logger",
+                                "org.apache.catalina.Logger",
+                                "className");
+        digester.addSetProperties(prefix + "Engine/Logger");
+        digester.addSetNext(prefix + "Engine/Logger",
+                            "setLogger",
+                            "org.apache.catalina.Logger");
+
+        /**
+         * 增加 Realm 规则
+         */
+        digester.addObjectCreate(prefix + "Engine/Realm",
+                                "org.apache.catalina.Realm",
+                                "className");
+        digester.addSetProperties(prefix + "Engine/Realm");
+        digester.addSetNext(prefix + "Engine/Realm",
+                            "setRealm",
+                            "org.apache.catalina.Realm");
 
 
+        /**
+         * 流水线
+         */
+//        digester.addObjectCreate(prefix + "Valve",
+//                                "org.apache.catalina.Value",
+//                                "className");
+//        digester.addSetProperties(prefix + "Valve");
+//        digester.addSetNext(prefix + "Valve",
+//                            "add");
     }
 }

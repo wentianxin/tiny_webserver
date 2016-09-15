@@ -26,8 +26,6 @@ public class LifecycleListenerRule extends Rule{
 
     /**
      * 创建 LifecycleListner 实例, 并放入 Lifecycle 实例中
-     * @param attributes The attribute list of this element
-     * @throws Exception
      */
     public void begin(Attributes attributes) throws Exception {
         String className = listenerClass;

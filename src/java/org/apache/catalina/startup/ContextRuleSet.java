@@ -28,88 +28,132 @@ public class ContextRuleSet extends RuleSetBase{
     @Override
     public void addRuleInstances(Digester digester) {
 
+        /**
+         * StandardContext 实例化
+         */
         digester.addObjectCreate(prefix + "Context",
                                  "org.apache.catalina.core.StandardContext",
                                  "className");
         digester.addSetProperties(prefix + "Context");
+        digester.addSetNext(prefix = "Context",
+                "addChild",
+                "org.apache.catalina.Container");
 
-        // TODO copy parent class loader
-
-
-        digester.addRule(prefix + "Context",
-                         new LifecycleListenerRule(digester,
+        /**
+         * StandardContext 默认监听器: ContextConfig
+         */
+        digester.addRule(prefix + "Context", new LifecycleListenerRule(digester,
                                  "org.apache.catalina.startup.ContextConfig",
                                  "contextConfigClass"));
-        digester.addSetNext(prefix = "Context",
-                            "addChild",
-                            "org.apache.catalina.Container");
 
 
+        digester.addRule(prefix + "Context", new CopyParentClassLoaderRule(
+                digester));
 
+
+        /**
+         * 监听器
+         */
         digester.addObjectCreate(prefix + "Context/Listener",
-                null, // MUST be specified in the element
+                null,
                 "className");
         digester.addSetProperties(prefix + "Context/Listener");
         digester.addSetNext(prefix + "Context/Listener",
                 "addLifecycleListener",
                 "org.apache.catalina.LifecycleListener");
 
+
         /**
          * Loader 关联
          * 因为 Loader 构造器的实例化要传入参数, 所以不能使用 class.newInstance();
          * 而是使用 Constructor 实例化
          */
-        digester.addRule(prefix + "Context/Loader",
-                new CreateLoaderRule(digester,
-                                "org.apache.catalina.loader.WebappLoader",
-                                "className"));
+        digester.addRule(prefix + "Context/Loader", new CreateLoaderRule(digester,
+                                                        "org.apache.catalina.loader.WebappLoader",
+                                                        "className"));
         digester.addSetProperties(prefix + "Context/Loader");
         digester.addSetNext(prefix + "Context/Loader",
-                "setLoader",
-                "org.apache.catalina.Loader");
+                        "setLoader",
+                        "org.apache.catalina.Loader");
 
 
-        digester.addObjectCreate(prefix + "Context/Logger",
-                null, // MUST be specified in the element
-                "className");
-        digester.addSetProperties(prefix + "Context/Logger");
-        digester.addSetNext(prefix + "Context/Logger",
-                "setLogger",
-                "org.apache.catalina.Logger");
+
+//        digester.addObjectCreate(prefix + "Context/Logger",
+//                null,
+//                "className");
+//        digester.addSetProperties(prefix + "Context/Logger");
+//        digester.addSetNext(prefix + "Context/Logger",
+//                "setLogger",
+//                "org.apache.catalina.Logger");
 
 
-        digester.addObjectCreate(prefix + "Context/Manager",
-                "org.apache.catalina.session.StandardManager",
-                "className");
-        digester.addSetProperties(prefix + "Context/Manager");
-        digester.addSetNext(prefix + "Context/Manager",
-                "setManager",
-                "org.apache.catalina.Manager");
+        /**
+         * Manager 组件
+         */
+//        digester.addObjectCreate(prefix + "Context/Manager",
+//                "org.apache.catalina.session.StandardManager",
+//                "className");
+//        digester.addSetProperties(prefix + "Context/Manager");
+//        digester.addSetNext(prefix + "Context/Manager",
+//                "setManager",
+//                "org.apache.catalina.Manager");
 
 
-        digester.addObjectCreate(prefix + "Context/Manager/Store",
-                null, // MUST be specified in the element
-                "className");
-        digester.addSetProperties(prefix + "Context/Manager/Store");
-        digester.addSetNext(prefix + "Context/Manager/Store",
-                "setStore",
-                "org.apache.catalina.Store");
+//        digester.addObjectCreate(prefix + "Context/Manager/Store",
+//                null, // MUST be specified in the element
+//                "className");
+//        digester.addSetProperties(prefix + "Context/Manager/Store");
+//        digester.addSetNext(prefix + "Context/Manager/Store",
+//                "setStore",
+//                "org.apache.catalina.Store");
 
         // TODO ApplicationParameter
 
+        digester.addObjectCreate(prefix + "Context/Parameter",
+                                "org.apache.catalina.deploy.ApplicationParameter",
+                                "className");
+        digester.addSetProperties(prefix + "Context/Parameter");
+        digester.addSetNext(prefix + "Context/Parameter",
+                            "addApplicationParameter",
+                            "org.apache.catalina.deploy.ApplicationParameter");
+
+
         // TODO Relam
 
+        digester.addObjectCreate(prefix + "Context/Realm",
+                null, // MUST be specified in the element
+                "className");
+        digester.addSetProperties(prefix + "Context/Realm");
+        digester.addSetNext(prefix + "Context/Realm",
+                "setRealm",
+                "org.apache.catalina.Realm");
+
+
         // TODO ResourceLink - ContextResourceLink
+        digester.addObjectCreate(prefix + "Context/ResourceLink",
+                "org.apache.catalina.deploy.ContextResourceLink");
+        digester.addSetProperties(prefix + "Context/ResourceLink");
+        digester.addSetNext(prefix + "Context/ResourceLink",
+                "addResourceLink",
+                "org.apache.catalina.deploy.ContextResourceLink");
 
         // TODO Resources - FileDirContext
+        digester.addObjectCreate(prefix + "Context/Resources",
+                "org.apache.naming.resources.FileDirContext",
+                "className");
+        digester.addSetProperties(prefix + "Context/Resources");
+        digester.addSetNext(prefix + "Context/Resources",
+                "setResources",
+                "javax.naming.directory.DirContext");
+
 
         digester.addObjectCreate(prefix + "Context/Valve",
-                null, // MUST be specified in the element
+                null,
                 "className");
         digester.addSetProperties(prefix + "Context/Valve");
         digester.addSetNext(prefix + "Context/Valve",
-                "addValve",
-                "org.apache.catalina.Valve");
+                "addValue",
+                "org.apache.catalina.Value");
 
 
         //TODO call addWrapperLifecycle
@@ -152,7 +196,7 @@ final class CreateLoaderRule extends Rule {
         Class [] types  =  { ClassLoader.class };
         Object[] args   =  { parentClassLoader };
 
-        Constructor<Loader> constructor = clazz.getDeclaredConstructor(types)；
+        Constructor<Loader> constructor = clazz.getDeclaredConstructor(types);
 
         Loader loader = constructor.newInstance(args);
 

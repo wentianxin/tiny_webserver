@@ -57,7 +57,9 @@ public class NamingRuleSet extends RuleSetBase {
                 "addLocalEjb",
                 "org.apache.catalina.deploy.ContextLocalEjb");
 
-
+        /**
+         * Resource 标签创建对应的对象 ContextResource
+         */
         digester.addObjectCreate(prefix + "Resource",
                 "org.apache.catalina.deploy.ContextResource");
         digester.addSetProperties(prefix + "Resource");
@@ -66,7 +68,9 @@ public class NamingRuleSet extends RuleSetBase {
                 "org.apache.catalina.deploy.ContextResource");
 
 
-
+        /**
+         * 调用 NamingResources 的 addResourceEnvRef 方法
+         */
         digester.addCallMethod(prefix + "ResourceEnvRef",
                 "addResourceEnvRef", 2);
         digester.addCallParam(prefix + "ResourceEnvRef/name", 0);
@@ -74,13 +78,15 @@ public class NamingRuleSet extends RuleSetBase {
 
 
 
+        /**
+         * 根据 ResourceParams 标签 创建 ResourceParams 对象
+         */
         digester.addObjectCreate(prefix + "ResourceParams",
                 "org.apache.catalina.deploy.ResourceParams");
         digester.addSetProperties(prefix + "ResourceParams");
         digester.addSetNext(prefix + "ResourceParams",
                 "addResourceParams",
                 "org.apache.catalina.deploy.ResourceParams");
-
 
 
         digester.addCallMethod(prefix + "ResourceParams/parameter",

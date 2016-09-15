@@ -19,21 +19,35 @@ public class HostRuleSet extends RuleSetBase{
     @Override
     public void addRuleInstances(Digester digester) {
 
-
+        /**
+         * Host 实例化
+         */
         digester.addObjectCreate(prefix + "Host",
                                  "org.apache.catalina.core.StandardHost",
                                  "className");
         digester.addSetProperties(prefix + "Host");
-        // TODO copy parent laoder
-        digester.addRule(prefix + "Host",
-                         new LifecycleListenerRule(digester,
+        digester.addSetNext(prefix + "Host",
+                "addChild",
+                "org.apache.catalina.Container");
+
+
+        /**
+         * 增加默认的 监听器: HostConfig
+         */
+        digester.addRule(prefix + "Host", new LifecycleListenerRule(digester,
                                  "org.apache.catalina.startup.HostConfig",
                                  "hostConfigClass"));
-        digester.addSetNext(prefix + "Host",
-                            "addChild",
-                            "org.apache.catalina.Container");
 
 
+        /**
+         * 设置父类加载器
+         */
+        digester.addRule(prefix + "Host", new CopyParentClassLoaderRule(digester));
+
+
+        /**
+         * 监听器
+         */
         digester.addObjectCreate(prefix + "Host/Listener",
                 null, // MUST be specified in the element
                 "className");
@@ -43,6 +57,9 @@ public class HostRuleSet extends RuleSetBase{
                 "org.apache.catalina.LifecycleListener");
 
 
+        /**
+         * 日志组件
+         */
         digester.addObjectCreate(prefix + "Host/Logger",
                 null, // MUST be specified in the element
                 "className");
@@ -52,10 +69,11 @@ public class HostRuleSet extends RuleSetBase{
                 "org.apache.catalina.Logger");
 
 
-
-
+        /**
+         * Realm 组件
+         */
         digester.addObjectCreate(prefix + "Host/Realm",
-                null, // MUST be specified in the element
+                null,
                 "className");
         digester.addSetProperties(prefix + "Host/Realm");
         digester.addSetNext(prefix + "Host/Realm",
@@ -63,13 +81,16 @@ public class HostRuleSet extends RuleSetBase{
                 "org.apache.catalina.Realm");
 
 
+        /**
+         * 流水线
+         */
         digester.addObjectCreate(prefix + "Host/Valve",
-                null, // MUST be specified in the element
+                null,
                 "className");
         digester.addSetProperties(prefix + "Host/Valve");
         digester.addSetNext(prefix + "Host/Valve",
                 "addValve",
-                "org.apache.catalina.Valve");
+                "org.apache.catalina.Value");
 
 
 
