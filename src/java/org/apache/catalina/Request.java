@@ -72,6 +72,7 @@ public interface Request {
     public void setServerPort(int port);
 
 
-
+    public void setContext(Context context);
+    public Context getContext();
 
 }

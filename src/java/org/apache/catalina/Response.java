@@ -13,7 +13,7 @@ public interface Response {
     // ------------------------------------ Properties
 
     public Connector getConnector();
-    public void setConnector();
+    public void setConnector(Connector connector);
 
     public void setError();
     public boolean isError();
@@ -29,7 +29,7 @@ public interface Response {
 
 
     public OutputStream getStream();
-    public void setSream(OutputStream stream);
+    public void setStream(OutputStream stream);
 
 
     // ---------------------------
