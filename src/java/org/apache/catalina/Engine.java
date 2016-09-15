@@ -9,5 +9,8 @@ public interface Engine extends Container{
 
     public void setDefaultHost(String defaultHost);
 
+    public void importDefaultContext(Context context);
+
+
 
 }

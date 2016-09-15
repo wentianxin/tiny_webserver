@@ -10,20 +10,22 @@ package org.apache.catalina;
 public interface Host extends Container{
 
     public String getAppBase();
-
     public void setAppBase(String appBase);
 
 
-    public String getName();
 
-
-    public void setName();
+    public boolean getAutoDeploy();
+    public void setAutoDeploy(boolean autoDeploy);
 
 
     public Context map(String uri);
 
 
+
     public String[] findAliases();
 
     public void removeAlias(String alias);
+
+
+    public void importDefaultContext(Context context);
 }
