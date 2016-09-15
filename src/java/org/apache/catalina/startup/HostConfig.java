@@ -55,9 +55,16 @@ public class HostConfig implements LifecycleListener{
 
     private void depolyDescriptiors(File appBase, String[] files) {
 
+
     }
 
     private void depolyWARS(File appBase, String[] files) {
+
+    }
+
+
+    private void depolyDirectories(File appBase, String[] files) {
+
 
     }
 
