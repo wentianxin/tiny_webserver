@@ -4,6 +4,8 @@ import org.apache.catalina.Container;
 import org.apache.catalina.Lifecycle;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Server;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.digester.Digester;
 import org.apache.tomcat.util.digester.Rule;
 import org.xml.sax.Attributes;
@@ -24,6 +26,8 @@ import java.net.Socket;
  * Created by tisong on 9/6/16.
  */
 public class Catalina {
+
+    private Log logger = LogFactory.getLog(Catalina.class);
 
     /**
      * 配置文件的相对路径(相对于catalina.home)
@@ -70,37 +74,32 @@ public class Catalina {
 
         try {
             if (arguments(args)) {
-                execute();
+                if (starting) {
+                    start();
+                } else if (stopping) {
+                    stop();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace(System.out);
         }
     }
 
-    protected void execute() throws Exception {
-
-        if (starting) {
-            start();
-        } else if (stopping) {
-            stop();
-        }
-    }
 
 
     protected void start() {
 
         Digester digester = createStartDigester();
 
-        File file = configFile();
+        File file = configFile();   // 获取配置文件
 
         FileInputStream fis = null;
         try {
+            logger.info("server.xml 配置文件的路径: " + file.getAbsolutePath());
             InputSource is = new InputSource("file://" + file.getAbsolutePath());
 
             fis = new FileInputStream(file);
-
             is.setByteStream(fis);
-
             digester.push(this);
             digester.parse(is);
         } catch (FileNotFoundException e) {
@@ -252,6 +251,7 @@ public class Catalina {
         return true;
     }
 
+
     /**
      * 输出 catalina正确的启动参数
      */
@@ -276,7 +276,9 @@ public class Catalina {
         System.setProperty("catalina.home",
                 System.getProperty("user.dir"));
 
+        logger.info("catalina home: " + System.getProperty("catalina.home"));
     }
+
 
     /**
      * 设置系统变量 catalina.base 为 catalina.home
@@ -289,6 +291,7 @@ public class Catalina {
         System.setProperty("catalina.base",
                 System.getProperty("catalina.home"));
 
+        logger.info("catalina base: " + System.getProperty("catalina.base"));
     }
 
 
@@ -312,7 +315,7 @@ public class Catalina {
 
 
         /**
-         * Server Service Engine Host
+         * Server-Service-Engine-Host
          */
         Digester digester = new Digester();
 
@@ -323,7 +326,7 @@ public class Catalina {
          * Server服务器的实例化
          */
         digester.addObjectCreate("Server",
-                                 "org.apache.core.StandardServer",
+                                 "org.apache.catalina.core.StandardServer",
                                  "className");
         digester.addSetProperties("Server");
 
@@ -335,14 +338,14 @@ public class Catalina {
         digester.addSetProperties("Server/GlobalNamingResources");
         digester.addSetNext("Server/GlobalNamingResources",
                             "setGlobalNamingResources");
-        digester.addRuleSet(new NamingRuleSet("Server/GlobalNamingResources/"));
+
 
         /**
          * Server 监听器实例化
          */
         digester.addObjectCreate("Server/Listener",
                                  null, // 根据部署描述符来具体定(不一定是 LifecycleListener)
-                                 "classNaming");
+                                 "className");
         digester.addSetProperties("Server/Listener");
         digester.addSetNext("Server/Listener",
                             "addLifecycleListener",
@@ -355,12 +358,19 @@ public class Catalina {
          * Service 服务实例化
          */
         digester.addObjectCreate("Server/Service",
-                                 "org.apache.catalina.core.StandService",
+                                 "org.apache.catalina.core.StandardService",
                                  "className");
         digester.addSetProperties("Server/Service");
         digester.addSetNext("Server/Service",
                             "addService",
                             "org.apache.catalina.Service");
+
+        /**
+         * 全局资源实例化
+         */
+        digester.addRuleSet(new NamingRuleSet("Server/GlobalNamingResources/"));
+
+
         /**
          * Service 监听器实例化
          */
@@ -373,16 +383,17 @@ public class Catalina {
                             "org.apache.catalina.LifecycleListener");
 
 
-
-
         /**
          * Connector 连接器实例化
          */
         digester.addObjectCreate("Server/Service/Connector",
-                                 "org.apache.catalina.connector.http10.HttpConnector");
+                                 "org.apache.catalina.connector.http10.HttpConnector",
+                                 "className");
+        digester.addSetProperties("Server/Service/Connector");
         digester.addSetNext("Server/Service/Connector",
                                  "addConnector",
                                  "org.apache.catalina.Connector");
+
         /**
          * Connector Factory 工厂实例化
          */
@@ -393,6 +404,7 @@ public class Catalina {
         digester.addSetNext("Server/Service/Connector/Factory",
                             "setFactory",
                             "org.apache.catalina.net.ServerSocketFactory");
+
         /**
          * Connector 监听器实例化
          */
@@ -406,17 +418,21 @@ public class Catalina {
 
 
 
-
         /**
          * Engine 引擎实例化
          */
         digester.addRuleSet(new EngineRuleSet("Server/Service/"));
-
         /**
-         * Engine 下的 Default Context 实例化 与 DefaultContext JNDI 资源实例化
-         */
-        digester.addRuleSet(new ContextRuleSet("Server/Service/Engine/Default"));
-        digester.addRuleSet(new NamingRuleSet("Server/Service/Engine/DefaultContext/"));
+         * Engine 父类加载器实例化
+         **/
+        digester.addRule("Server/Service/Engine", new SetParentClassLoaderRule(digester,
+                parentClassLoader));
+//
+//        /**
+//         * Engine 下的 Default Context 实例化 与 DefaultContext JNDI 资源实例化
+//         */
+//        digester.addRuleSet(new ContextRuleSet("Server/Service/Engine/Default"));
+//        digester.addRuleSet(new NamingRuleSet("Server/Service/Engine/DefaultContext/"));
 
 
         /**
@@ -424,26 +440,30 @@ public class Catalina {
          */
         digester.addRuleSet(new HostRuleSet("Server/Service/Engine/"));
 
-        /**
-         * Host 下的 Default Context 实例化 与 DefaultContext JNDI 资源实例化
-         */
-        digester.addRuleSet(new ContextRuleSet("Server/Service/Engine/Host/Default"));
-        digester.addRuleSet(new NamingRuleSet("Server/Service/Engine/Host/DefaultContext/"));
 
 
         /**
-         * Context 应用实例化 与 Context JNDI 资源实例化
+         * Context 实例化(对于资源而言, 只有全局资源与 应用资源两种; 其他容器下不可添加)
          */
         digester.addRuleSet(new ContextRuleSet("Server/Service/Engine/Host/"));
-        digester.addRuleSet(new NamingRuleSet("Server/Service/Engine/Host/Context/"));
+        digester.addRuleSet(new NamingRuleSet("Server/Service/Engine/Host/Context"));
+
+//        /**
+//         * Host 下的 Default Context 实例化 与 DefaultContext JNDI 资源实例化
+//         */
+//        digester.addRuleSet(new ContextRuleSet("Server/Service/Engine/Host/Default"));
+//        digester.addRuleSet(new NamingRuleSet("Server/Service/Engine/Host/DefaultContext/"));
+//
+//
+//        /**
+//         * Context 应用实例化 与 Context JNDI 资源实例化
+//         */
+//        digester.addRuleSet(new ContextRuleSet("Server/Service/Engine/Host/"));
+//        digester.addRuleSet(new NamingRuleSet("Server/Service/Engine/Host/Context/"));
 
 
-        /**
-         * Engine 父类加载器实例化
-         */
-        digester.addRule("Server/Service/Engine",
-                new SetParentClassLoaderRule(digester,
-                        parentClassLoader));
+
+
 
         return digester;
     }
@@ -503,6 +523,7 @@ public class Catalina {
 
         }
     }
+
 
     // --------------------------------------------------- Properties
 
