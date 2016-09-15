@@ -9,6 +9,15 @@ import java.util.Enumeration;
  */
 public class StandardWrapperFacade implements ServletConfig{
 
+
+    private ServletConfig config = null;
+
+
+    public StandardWrapperFacade (StandardWrapper config) {
+
+        this.config = config;
+    }
+
     @Override
     public String getServletName() {
         return null;

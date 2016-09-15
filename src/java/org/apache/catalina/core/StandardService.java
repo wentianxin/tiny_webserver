@@ -3,6 +3,8 @@ package org.apache.catalina.core;
 import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleSupport;
 import org.apache.catalina.util.StringManager;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
 
 /**
  * Created by tisong on 9/6/16.
@@ -10,8 +12,12 @@ import org.apache.catalina.util.StringManager;
 public class StandardService
     implements Service, Lifecycle{
 
+    private static final Log logger = LogFactory.getLog(StandardService.class);
+
+
     private static final StringManager sm =
             StringManager.getManager(Constants.Package);
+
 
     private Container container = null;
 
@@ -26,6 +32,12 @@ public class StandardService
 
 
     private LifecycleSupport lifecycleSupport = new LifecycleSupport(this);
+
+
+    public StandardService() {
+
+        logger.info("StandardService 初始化");
+    }
 
     // --------------------------------------------- Implements Service
 
@@ -100,6 +112,7 @@ public class StandardService
         connectors = results;
     }
 
+
     /**
      * Service初始化;
      * 初始化关联的 connector组件(绑定端口)
@@ -133,7 +146,7 @@ public class StandardService
         if (started) {
             throw new LifecycleException();
         }
-
+        lifecycleSupport.fireLifecycleEvent(BEFORE_START_EVENT, null);
         lifecycleSupport.fireLifecycleEvent(START_EVENT, null);
         started = true;
 
@@ -141,11 +154,17 @@ public class StandardService
             ((Lifecycle) container).start();
         }
 
+
+        /**
+         * 创建线程池(队列); 并开启一个后台线程接收Socket
+         */
         for (Connector connector: connectors) {
             if (connector instanceof Lifecycle) {
                 ((Lifecycle) connector).start();
             }
         }
+
+        lifecycleSupport.fireLifecycleEvent(AFTER_START_EVENT, null);
     }
 
     @Override

@@ -44,7 +44,7 @@ public class StandardContextValve extends ValveBase{
             Manager manager = context.getManager();
             if (manager != null) {
                 Session session = manager.findSession(sessionId);
-                if (session != null && session.isValid()) {
+                if (session != null && session.isVaild()) {
                     session.access();
                 }
             }

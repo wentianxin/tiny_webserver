@@ -16,6 +16,17 @@ import java.util.Set;
  */
 public class ApplicationContext implements ServletContext{
 
+    private StandardContext context = null;
+
+    private String basePath = null;
+
+
+    public ApplicationContext(String basePath, StandardContext context) {
+
+        this.context = context;
+        this.basePath = basePath;
+    }
+
     @Override
     public String getContextPath() {
         return null;

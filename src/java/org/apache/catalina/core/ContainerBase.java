@@ -7,7 +7,9 @@ import org.apache.catalina.util.StringManager;
 import javax.naming.directory.DirContext;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,9 +31,15 @@ public class ContainerBase
 
     protected Manager manager = null;
 
+    protected Realm realm = null;
+
+    protected Logger log = null;
+
     protected Mapper mapper = null;
 
     protected Map<String, Mapper> mappers = new HashMap<String, Mapper>();
+
+    protected String mapperClass = null;
 
     protected Map<String, Container> children = new HashMap<String, Container>();
 
@@ -42,9 +50,15 @@ public class ContainerBase
 
     protected String name = null;
 
-
+    /**
+     * Lifecycle Listener 的调用者
+     */
     protected LifecycleSupport lifecycleSupport = new LifecycleSupport(this);
 
+    /**
+     * Container Listener
+     */
+    protected List<ContainerListener> containerListeners = new ArrayList<ContainerListener>();
 
     protected DirContext resources = null;
 
@@ -86,7 +100,36 @@ public class ContainerBase
 
     @Override
     public ClassLoader getParentClassLoader() {
-        return this.parentClassLoader;
+        if (parentClassLoader != null) {
+            return this.parentClassLoader;
+        } else if (parent != null) {
+            return parent.getParentClassLoader();
+        } else {
+            return ClassLoader.getSystemClassLoader();
+        }
+    }
+
+
+
+
+    @Override
+    public Realm getRealm() {
+        return null;
+    }
+
+    @Override
+    public void setRealm(Realm realm) {
+
+    }
+
+    @Override
+    public Logger getLogger() {
+        return null;
+    }
+
+    @Override
+    public void setLogger(Logger logger) {
+
     }
 
 
@@ -126,9 +169,15 @@ public class ContainerBase
 
         child.setParent(this);
 
+        try {
+            ((Lifecycle)child).start();
+        } catch (LifecycleException e) {
+            e.printStackTrace();
+        }
+
         children.put(child.getName(), child);
 
-        // TODO fireContainerEvent(ADD_CHILD_EVENT, child);
+        fireContainerEvent(ADD_CHILD_EVENT, child);
     }
 
     @Override
@@ -291,26 +340,39 @@ public class ContainerBase
                     sm.getString("containerBase.alreadyStarted"));
         }
 
+
+        lifecycleSupport.fireLifecycleEvent(BEFORE_START_EVENT, null);
+
+        addDefaultMapper(this.mapperClass);
+
         started = true;
 
-
-        if (loader != null && loader instanceof Lifecycle) {
+        if ((loader != null) && (loader instanceof Lifecycle)) {
             ((Lifecycle) loader).start();
         }
+//        if ((logger != null) && (logger instanceof Lifecycle))
+//            ((Lifecycle) logger).start();
         if ((manager != null) && (manager instanceof Lifecycle)) {
             ((Lifecycle) manager).start();
         }
-
-        Mapper mappers[] = findMappers();
-        for (int i = 0; i < mappers.length; i++) {
-            if (mappers[i] instanceof Lifecycle)
-                ((Lifecycle) mappers[i]).start();
+//        if ((cluster != null) && (cluster instanceof Lifecycle))
+//            ((Lifecycle) cluster).start();
+//        if ((realm != null) && (realm instanceof Lifecycle))
+//            ((Lifecycle) realm).start();
+        if ((resources != null) && (resources instanceof Lifecycle)) {
+            ((Lifecycle) resources).start();
         }
 
-        Container children[] = findChildren();
-        for (int i = 0; i < children.length; i++) {
-            if (children[i] instanceof Lifecycle)
-                ((Lifecycle) children[i]).start();
+        Mapper[] mappers = findMappers(); // Mapper 暂时并未实现 Lifecycle 接口
+        for (Mapper mapper: mappers) {
+            if (mapper instanceof Lifecycle)
+                ((Lifecycle) mapper).start();
+        }
+
+        for (Container child: findChildren() ){
+            if (child instanceof Lifecycle) {
+                ((Lifecycle) child).start();
+            }
         }
 
         if (pipeline instanceof Lifecycle) {
@@ -318,6 +380,8 @@ public class ContainerBase
         }
 
         lifecycleSupport.fireLifecycleEvent(START_EVENT, null);
+
+        lifecycleSupport.fireLifecycleEvent(AFTER_START_EVENT, null);
     }
 
     @Override
@@ -390,6 +454,33 @@ public class ContainerBase
 
     public void fireContainerEvent(String type, Object data) {
 
+        ContainerEvent event = new ContainerEvent(this, type, data);
 
+        for (ContainerListener listener: containerListeners) {
+            listener.containerEvent(event);
+        }
+    }
+
+
+
+
+    protected void addDefaultMapper(String  mapperClass) {
+
+        if (mapperClass == null || mappers.size() >= 1) {
+            return ;
+        }
+
+        try {
+            Class clazz = Class.forName(mapperClass);
+            Mapper mapper = (Mapper) clazz.newInstance();
+            mapper.setProtocol("http");
+            addMapper(mapper);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 }

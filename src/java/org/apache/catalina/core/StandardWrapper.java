@@ -19,7 +19,7 @@ public class StandardWrapper extends ContainerBase
     private String servletClass = null;
 
 
-    private InstanceSupport instanceSupport = new InstanceSupport(this);
+    //private InstanceSupport instanceSupport = new InstanceSupport(this);
 
 
     private boolean allocated = false;
@@ -27,6 +27,9 @@ public class StandardWrapper extends ContainerBase
     private boolean singelThreadModel = false;
 
     private int countAllocated = 0;
+
+
+    private StandardWrapperFacade facade = new StandardWrapperFacade(this);
 
 
     public StandardWrapper() {
@@ -105,7 +108,11 @@ public class StandardWrapper extends ContainerBase
 
         }
 
-        servlet.init(facade);
+        try {
+            servlet.init(facade);
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
 
 
         servlet = instance;

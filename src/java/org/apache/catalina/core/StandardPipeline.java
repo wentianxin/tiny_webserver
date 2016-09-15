@@ -50,11 +50,6 @@ public class StandardPipeline
     }
 
     @Override
-    public LifecycleListener[] findLifecycleListener() {
-        return new LifecycleListener[0];
-    }
-
-    @Override
     public void removeLifecycleListener(LifecycleListener listener) {
 
     }

@@ -20,6 +20,16 @@ public class ApplicationFilterConfig implements FilterConfig {
 
     private FilterDef filterDef = null;
 
+    /**
+     * 关联组件; 关联 FilterDef; 实例化Filter对象
+     * @param context
+     * @param filterDef
+     */
+    public ApplicationFilterConfig(Context context, FilterDef filterDef) throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+
+        this.context = context;
+        setFilterDef(filterDef);
+    }
     @Override
     public String getFilterName() {
         return filterDef.getFilterName();
@@ -40,7 +50,14 @@ public class ApplicationFilterConfig implements FilterConfig {
         return null;
     }
 
-
+    /**
+     * 根据FilterDef信息来实例化Filter对象
+     * @return
+     * @throws ClassNotFoundException
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     * @throws ServletException
+     */
     public Filter getFilter() throws ClassNotFoundException,
             IllegalAccessException, InstantiationException, ServletException {
 
@@ -66,4 +83,17 @@ public class ApplicationFilterConfig implements FilterConfig {
         return filter;
     }
 
+
+    public void setFilterDef(FilterDef filterDef) throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        this.filterDef = filterDef;
+
+        if (filterDef == null) {
+            if (this.filter != null) {
+                this.filter.destroy();
+            }
+            this.filter = null;
+        } else {
+            getFilter();
+        }
+    }
 }
