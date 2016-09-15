@@ -1,5 +1,6 @@
 package org.apache.catalina.connector;
 
+import org.apache.catalina.Context;
 import org.apache.catalina.HttpRequest;
 
 import javax.servlet.RequestDispatcher;
@@ -255,6 +256,16 @@ public class HttpRequestBase
 
     @Override
     public RequestDispatcher getRequestDispatcher(String path) {
+        return null;
+    }
+
+    @Override
+    public void setContext(Context context) {
+
+    }
+
+    @Override
+    public Context getContext() {
         return null;
     }
 }

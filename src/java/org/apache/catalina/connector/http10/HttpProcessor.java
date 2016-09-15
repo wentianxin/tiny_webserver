@@ -10,11 +10,10 @@ import java.util.StringTokenizer;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.catalina.HttpRequest;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleListener;
+
+import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleSupport;
+import org.apache.catalina.util.ServerInfo;
 import org.apache.catalina.util.StringManager;
 
 public final class HttpProcessor
@@ -62,6 +61,10 @@ public final class HttpProcessor
 
 
 
+    private static final String match = ";" + Globals.SESSION_PARAMETER_NAME + "=";
+
+
+
     // ----------------------------------------------------------- Constructors
 
     public HttpProcessor(HttpConnector connector, int id) {
@@ -95,7 +98,7 @@ public final class HttpProcessor
             // Finish up this request
             request.recycle();
             response.recycle();
-            connector.recycle(this);
+            connector.recycleProcessor(this);
 
         }
 
@@ -208,7 +211,6 @@ public final class HttpProcessor
             ((HttpServletResponse) response.getResponse()).setHeader
                     ("Server", SERVER_INFO);
         } catch (Exception e) {
-            log("process.create", e);
             ok = false;
         }
 
@@ -317,13 +319,19 @@ public final class HttpProcessor
 
     }
 
+
+    private void parseConnection(Socket socket) {
+
+    }
+
+
     private void parseHeaders(InputStream input)
             throws IOException, ServletException {
 
         while (true) {
 
             // Read the next header line
-            String line = read(input);
+            String line = readLine(input);
             if ((line == null) || (line.length() < 1))
                 break;
 
@@ -404,9 +412,7 @@ public final class HttpProcessor
         int question = uri.indexOf('?');
         if (question >= 0) {
             request.setQueryString(uri.substring(question + 1));
-            if (debug >= 1)
-                log(" Query string is " +
-                        ((HttpServletRequest) request.getRequest()).getQueryString());
+
             uri = uri.substring(0, question);
         } else
             request.setQueryString(null);
@@ -425,9 +431,6 @@ public final class HttpProcessor
             }
             request.setRequestedSessionURL(true);
             uri = uri.substring(0, semicolon) + rest;
-            if (debug >= 1)
-                log(" Requested URL session id is " +
-                        ((HttpServletRequest) request.getRequest()).getRequestedSessionId());
         } else {
             request.setRequestedSessionId(null);
             request.setRequestedSessionURL(false);
@@ -462,7 +465,7 @@ public final class HttpProcessor
             try {
                 threadSync.wait(5000);
             } catch (InterruptedException e) {
-                ;
+
             }
         }
         thread = null;

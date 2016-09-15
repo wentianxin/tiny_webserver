@@ -1,8 +1,9 @@
 package org.apache.catalina.connector;
 
+import org.apache.catalina.Response;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.ws.Response;
 import java.io.IOException;
 
 /**

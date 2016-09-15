@@ -12,7 +12,6 @@ public class RequestStream extends ServletInputStream{
 
     public RequestStream(Request request) {
         super();
-        
     }
 
     @Override

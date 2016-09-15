@@ -76,7 +76,7 @@ public abstract class ResponseBase implements Response, ServletResponse{
         OutputStreamWriter osr =
                 new OutputStreamWriter(stream, getCharacterEncoding());
 
-        writer = new ResponseWriter(ors, (ResponseStream) stream);
+        writer = new ResponseWriter(osr, (ResponseStream) stream);
 
         return writer;
     }
@@ -146,7 +146,7 @@ public abstract class ResponseBase implements Response, ServletResponse{
     }
 
     @Override
-    public void setConnector() {
+    public void setConnector(Connector connector) {
 
     }
 
@@ -181,7 +181,7 @@ public abstract class ResponseBase implements Response, ServletResponse{
     }
 
     @Override
-    public void setSream(OutputStream stream) {
+    public void setStream(OutputStream stream) {
 
     }
 

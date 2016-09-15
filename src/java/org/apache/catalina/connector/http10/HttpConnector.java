@@ -124,7 +124,7 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     @Override
     public void setFactory(ServerSocketFactory factory) {
-
+        this.factory = factory;
     }
 
     @Override
@@ -331,6 +331,10 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
     }
 
 
+    public void recycleProcessor(HttpProcessor processor) {
+        processors.push(processor);
+    }
+
 
     private void threadStart() {
 
@@ -356,4 +360,21 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
     // -----------------------------------
 
 
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+
+
+    public int getBufferSize(){
+        return bufferSize;
+    }
+
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
+    }
 }
