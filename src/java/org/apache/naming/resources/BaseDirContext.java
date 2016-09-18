@@ -9,85 +9,100 @@ import java.util.Hashtable;
  */
 public abstract class BaseDirContext implements DirContext {
 
+
+    protected String docBase = null;
+
+    protected Hashtable env = null;
+
+
+    public BaseDirContext() {
+        this.env = new Hashtable();
+    }
+
+    public BaseDirContext(Hashtable env) {
+        this.env = env;
+    }
+
+
+
+    public void setDocBase(String docBase) {
+        this.docBase = docBase;
+    }
+
+    public String getDocBase() {
+        return docBase;
+    }
+
+
+
     @Override
     public Attributes getAttributes(Name name) throws NamingException {
-        return null;
+        return getAttributes(name.toString());
     }
 
     @Override
     public Attributes getAttributes(String name) throws NamingException {
-        return null;
+        return getAttributes(name, null);
     }
 
     @Override
     public Attributes getAttributes(Name name, String[] attrIds) throws NamingException {
-        return null;
+        return getAttributes(name.toString(), attrIds);
     }
 
     @Override
-    public Attributes getAttributes(String name, String[] attrIds) throws NamingException {
-        return null;
-    }
+    public abstract Attributes getAttributes(String name, String[] attrIds) throws NamingException;
+
+
 
     @Override
     public void modifyAttributes(Name name, int mod_op, Attributes attrs) throws NamingException {
-
+        modifyAttributes(name.toString(), mod_op, attrs);
     }
 
     @Override
-    public void modifyAttributes(String name, int mod_op, Attributes attrs) throws NamingException {
+    public abstract void modifyAttributes(String name, int mod_op, Attributes attrs) throws NamingException;
 
-    }
 
     @Override
     public void modifyAttributes(Name name, ModificationItem[] mods) throws NamingException {
-
+        modifyAttributes(name.toString(), mods);
     }
 
     @Override
-    public void modifyAttributes(String name, ModificationItem[] mods) throws NamingException {
-
-    }
+    public abstract void modifyAttributes(String name, ModificationItem[] mods) throws NamingException;
 
     @Override
     public void bind(Name name, Object obj, Attributes attrs) throws NamingException {
-
+        bind(name.toString(), obj, attrs);
     }
 
     @Override
-    public void bind(String name, Object obj, Attributes attrs) throws NamingException {
-
-    }
+    public abstract void bind(String name, Object obj, Attributes attrs) throws NamingException;
 
     @Override
     public void rebind(Name name, Object obj, Attributes attrs) throws NamingException {
-
+        rebind(name.toString(), obj, attrs);
     }
 
     @Override
-    public void rebind(String name, Object obj, Attributes attrs) throws NamingException {
-
-    }
+    public abstract void rebind(String name, Object obj, Attributes attrs) throws NamingException;
 
     @Override
     public DirContext createSubcontext(Name name, Attributes attrs) throws NamingException {
-        return null;
+        return createSubcontext(name.toString(), attrs);
     }
 
     @Override
-    public DirContext createSubcontext(String name, Attributes attrs) throws NamingException {
-        return null;
-    }
+    public abstract DirContext createSubcontext(String name, Attributes attrs) throws NamingException;
 
     @Override
     public DirContext getSchema(Name name) throws NamingException {
-        return null;
+        return getSchema(name.toString());
     }
 
     @Override
-    public DirContext getSchema(String name) throws NamingException {
-        return null;
-    }
+    public abstract DirContext getSchema(String name) throws NamingException;
 
     @Override
     public DirContext getSchemaClassDefinition(Name name) throws NamingException {
@@ -141,22 +156,23 @@ public abstract class BaseDirContext implements DirContext {
 
     @Override
     public Object lookup(Name name) throws NamingException {
-        return null;
+        return lookup(name.toString());
     }
 
     @Override
-    public Object lookup(String name) throws NamingException {
-        return null;
-    }
+    public abstract Object lookup(String name) throws NamingException;
+
+
+
 
     @Override
     public void bind(Name name, Object obj) throws NamingException {
-
+        bind(name.toString(), obj);
     }
 
     @Override
     public void bind(String name, Object obj) throws NamingException {
-
+        bind(name, obj, null);
     }
 
     @Override
