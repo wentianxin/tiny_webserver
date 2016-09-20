@@ -13,9 +13,9 @@ import java.util.Locale;
  */
 public class ResponseFacade implements ServletResponse{
 
-    private Response resp = null;  // 辅助性
+    protected Response resp = null;  // 辅助性
 
-    private ServletResponse response = null;
+    protected ServletResponse response = null;
 
     public ResponseFacade(Response response) {
         this.resp = response;

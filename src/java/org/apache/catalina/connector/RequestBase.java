@@ -1,8 +1,6 @@
 package org.apache.catalina.connector;
 
-import org.apache.catalina.Connector;
-import org.apache.catalina.Request;
-import org.apache.catalina.Response;
+import org.apache.catalina.*;
 import org.apache.catalina.util.StringManager;
 
 import javax.servlet.RequestDispatcher;
@@ -23,38 +21,76 @@ public abstract class RequestBase
     protected static StringManager sm =
             StringManager.getManager(Constants.Package);
 
+
     protected String authorization = null;
 
+    /**
+     * 请求字符的编码方法
+     */
     protected String characterEncoding = null;
 
-    protected int contentLength;
+    /**
+     * 长度
+     */
+    protected int contentLength = -1;
 
-    protected String contentType;
+    /**
+     * 内容的类型
+     */
+    protected String contentType = null;
 
+    /**
+     * 请求的协议
+     */
     protected String protocol = null;
 
+
     protected String scheme = null;
+
 
     protected String serverName = null;
 
     protected int serverPort ;
 
-
+    /**
+     * 关联的 RequestFacade 门面模式
+     */
     protected RequestFacade facade = new RequestFacade(this);
 
+    /**
+     * 关联的 Respones对象(一对一)
+     */
     protected Response response = null;
 
+    /**
+     * 关联的 Socket对象
+     */
     protected Socket socket = null;
 
-    protected InputStream input = null;
+    /**
+     * 关联的 Connector 对象
+     */
+    protected Connector connector = null;
 
+    /**
+     * 关联的 Context 对象
+     */
+    protected Context context = null;
+
+    /**
+     * 关联的 Wrapper 对象
+     */
+    protected Wrapper wrapper = null;
+
+
+    protected InputStream input = null;
     protected BufferedReader reader = null;
 
     protected ServletInputStream stream = null;
 
 
 
-    protected Connector connector = null;
+
 
 
     // ------------------------------------------------ Abstract ServletRequest
@@ -354,5 +390,9 @@ public abstract class RequestBase
     @Override
     public void setServerPort(int port) {
         this.serverPort = port;
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 }

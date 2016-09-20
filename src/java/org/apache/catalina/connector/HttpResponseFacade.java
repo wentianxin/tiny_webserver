@@ -2,6 +2,7 @@ package org.apache.catalina.connector;
 
 import org.apache.catalina.Response;
 
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -16,11 +17,14 @@ public final class HttpResponseFacade
 
     public HttpResponseFacade(Response response) {
         super(response);
+
     }
+
 
     @Override
     public void addCookie(Cookie cookie) {
 
+        ((HttpServletResponse) response).addCookie(cookie);
     }
 
     @Override
@@ -75,8 +79,9 @@ public final class HttpResponseFacade
 
     @Override
     public void setHeader(String name, String value) {
-
+        ((HttpServletResponse) response).setHeader(name, value);
     }
+
 
     @Override
     public void addHeader(String name, String value) {

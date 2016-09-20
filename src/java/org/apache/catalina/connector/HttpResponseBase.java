@@ -1,11 +1,18 @@
 package org.apache.catalina.connector;
 
+import org.apache.catalina.Connector;
+import org.apache.catalina.Context;
 import org.apache.catalina.HttpResponse;
 import org.apache.catalina.Response;
 
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by tisong on 9/4/16.
@@ -14,6 +21,23 @@ public class HttpResponseBase
     extends ResponseBase
     implements HttpResponse, HttpServletResponse{
 
+
+    protected Map<String, List> headers = new HashMap<String, List>();
+
+    protected List cookies = new ArrayList();
+
+    protected int status = HttpServletResponse.SC_OK;
+
+
+
+
+    protected HttpResponseFacade facade = new HttpResponseFacade(this);
+
+
+
+    protected Connector connector = null;
+
+    protected Context context = null;
 
 
     @Override
@@ -74,11 +98,43 @@ public class HttpResponseBase
     @Override
     public void setHeader(String name, String value) {
 
+        if (included) {
+            return ;
+        }
+
+        ArrayList values = new ArrayList();
+        values.add(value);
+        synchronized (headers) {
+            headers.put(name, values);
+        }
+
+        String match = name.toLowerCase();
+        if (match.equals("content-length")) {
+            int contentLength = -1;
+            try {
+                contentLength = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                ;
+            }
+            if (contentLength >= 0)
+                setContentLength(contentLength);
+        } else if (match.equals("content-type")) {
+            setContentType(value);
+        }
     }
 
     @Override
     public void addHeader(String name, String value) {
+        if (included) {
+            return ;
+        }
 
+        List values = headers.get(name);
+        if (values == null) {
+            values = new ArrayList();
+            headers.put(name, values);
+        }
+        values.add(value);
     }
 
     @Override
@@ -138,5 +194,9 @@ public class HttpResponseBase
     @Override
     public void reset(int status, String message) {
 
+    }
+
+    public ServletResponse getResponse() {
+        return facade;
     }
 }

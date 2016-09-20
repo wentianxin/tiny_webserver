@@ -18,6 +18,9 @@ import java.util.Locale;
  */
 public abstract class ResponseBase implements Response, ServletResponse{
 
+
+
+
     protected static StringManager sm =
             StringManager.getManager(Constants.Package);
 
@@ -29,40 +32,63 @@ public abstract class ResponseBase implements Response, ServletResponse{
     protected int contentLength = -1;
 
 
+    protected int contentCount = 0;
+
+
+    protected Request request = null;
+
+    protected Connector connector = null;
+
+
+    /**
+     * 关联的 输出流(Socket输出流)
+     */
     protected OutputStream output = null;
+
 
     protected ServletOutputStream stream = null;
 
     protected PrintWriter writer = null;
 
 
-    protected Request request = null;
+
 
     protected ResponseFacade facade = new ResponseFacade(this);
 
-    protected Connector connector = null;
+
+    /**
+     * RequestDispatcher.include();
+     */
+    protected boolean included = false;
+
+    protected boolean committed = false;
 
 
 
 
     @Override
     public String getCharacterEncoding() {
-        return null;
+        return this.characterEncoding;
     }
 
     @Override
     public String getContentType() {
-        return null;
+        return this.contentType;
     }
+
 
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
-        return null;
+        if (stream == null) {
+            stream = createOutputStream();
+        }
+
+
+        return this.stream;
     }
 
     @Override
     public PrintWriter getWriter() throws IOException {
-
         if (writer != null) {
             return writer;
         }
@@ -83,17 +109,17 @@ public abstract class ResponseBase implements Response, ServletResponse{
 
     @Override
     public void setCharacterEncoding(String charset) {
-
+        this.characterEncoding = charset;
     }
 
     @Override
     public void setContentLength(int len) {
-
+        this.contentLength = len;
     }
 
     @Override
     public void setContentType(String type) {
-
+        this.contentType = type;
     }
 
     @Override
@@ -142,12 +168,12 @@ public abstract class ResponseBase implements Response, ServletResponse{
 
     @Override
     public Connector getConnector() {
-        return null;
+        return this.connector;
     }
 
     @Override
     public void setConnector(Connector connector) {
-
+        this.connector = connector;
     }
 
     @Override
@@ -162,17 +188,17 @@ public abstract class ResponseBase implements Response, ServletResponse{
 
     @Override
     public Request getRequest() {
-        return null;
+        return this.request;
     }
 
     @Override
     public void setRequest(Request request) {
-
+        this.request = request;
     }
 
     @Override
     public ServletResponse getResponse() {
-        return null;
+        return this.facade;
     }
 
     @Override
@@ -182,7 +208,7 @@ public abstract class ResponseBase implements Response, ServletResponse{
 
     @Override
     public void setStream(OutputStream stream) {
-
+        this.output = stream;
     }
 
     @Override
