@@ -8,11 +8,13 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleSupport;
+import org.apache.catalina.util.RequestUtil;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.catalina.util.StringManager;
 
@@ -211,6 +213,7 @@ public final class HttpProcessor
             ((HttpServletResponse) response.getResponse()).setHeader
                     ("Server", SERVER_INFO);
         } catch (Exception e) {
+            e.printStackTrace();
             ok = false;
         }
 
@@ -322,6 +325,9 @@ public final class HttpProcessor
 
     private void parseConnection(Socket socket) {
 
+
+        request.setServerPort(serverPort);
+        request.setSocket(socket);
     }
 
 
@@ -337,9 +343,11 @@ public final class HttpProcessor
 
             // Parse the header name and value
             int colon = line.indexOf(':');
-            if (colon < 0)
+            if (colon < 0) {
                 throw new ServletException
                         (sm.getString("httpProcessor.parseHeaders.colon"));
+            }
+
             String name = line.substring(0, colon).trim();
             String match = name.toLowerCase();
             String value = line.substring(colon + 1).trim();
@@ -348,21 +356,39 @@ public final class HttpProcessor
             // Set the corresponding request headers
             if (match.equals("authorization")) {
 
+                request.setAuthorization(value);
+
             } else if (match.equals("accept-language")) {
 
 
-
             } else if (match.equals("cookie")) {
+                Cookie[] cookies = RequestUtil.parseCookieHeader(value);
 
+                for (Cookie cookie: cookies) {
+                    if (cookie.getName().equals(Globals.SESSION_PARAMETER_NAME)) {
+                        if (!request.isRequestedSessionIdFromCookie()) {
+                            request.setRequestedSessionId(cookie.getValue());
+                            request.setRequestedSessionCookie(true);
+                            request.setRequestedSessionURL(false);
+                        }
+                    }
+                    request.addCookie(cookie);
+                }
             } else if (match.equals("content-length")) {
-
+                try {
+                    request.setContentLength(Integer.valueOf(value));
+                } catch (Exception e) {
+                    throw new ServletException
+                            (sm.getString("httpProcessor.parseHeaders.contentLength"));
+                }
             } else if (match.equals("content-type")) {
-
+                request.setContentType(value);
             } else if (match.equals("host")) {
 
-            } else {
-                request.addHeader(name, value);
             }
+
+            request.addHeader(name, value);
+
         }
 
     }

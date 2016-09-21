@@ -76,22 +76,23 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     private List<HttpProcessor> createdProcessors = new ArrayList<HttpProcessor>();
 
-    private int minProcessors = 10;  // 启动时创建HttpProcessor数量
+    private int minProcessors = 5;  // 启动时创建HttpProcessor数量
 
-    private int maxProcessors = 50;  // 最大HttpProcessor数量
+    private int maxProcessors = 20;  // 最大HttpProcessor数量
 
     private int curProcessors = 0;   // 当前已创建HttpProcessor数量
 
 
+    private Container container = null;
 
     @Override
     public Container getContainer() {
-        return null;
+        return this.container;
     }
 
     @Override
     public void setContainer(Container container) {
-
+        this.container = container;
     }
 
     @Override
@@ -129,6 +130,8 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     @Override
     public void initialize() throws LifecycleException {
+
+        System.out.println("HttpConnector 初始化");
 
         if (initialized) {
             throw new LifecycleException(sm.getString("httpConnector.alreadyInitiaalized"));
@@ -184,6 +187,7 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
             if ((maxProcessors > 0) && (curProcessors >= maxProcessors))
                 break;
             createProcessor();
+            System.out.println("创建的第" + curProcessors +"个线程");
         }
     }
 
@@ -313,7 +317,7 @@ public class HttpConnector implements Connector, Lifecycle, Runnable{
 
     private HttpProcessor createProcessor() {
 
-        HttpProcessor processor = new HttpProcessor(this, curProcessors);
+        HttpProcessor processor = new HttpProcessor(this, curProcessors++);
 
         if (processor instanceof Lifecycle) {
             try {

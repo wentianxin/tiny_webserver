@@ -3,10 +3,12 @@ package org.apache.catalina.connector;
 import org.apache.catalina.Context;
 import org.apache.catalina.HttpRequest;
 import org.apache.catalina.Session;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.util.Enumerator;
 import org.apache.catalina.util.ParameterMap;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -220,7 +222,10 @@ public class HttpRequestBase
      */
     @Override
     public boolean isRequestedSessionIdFromCookie() {
-        return (requestedSessionId != null && requestedSessionCookie);
+        if (requestedSessionId != null)
+            return (requestedSessionCookie);
+        else
+            return (false);
     }
 
     @Override
@@ -380,6 +385,15 @@ public class HttpRequestBase
     }
 
 
+    @Override
+    public Wrapper getWrapper() {
+        return this.wrapper;
+    }
+
+    @Override
+    public void setWrapper(Wrapper wrapper) {
+        this.wrapper = wrapper;
+    }
 
     protected void parseParameters() {
         if (parsed) {
@@ -388,6 +402,8 @@ public class HttpRequestBase
     }
 
 
-
-
+    @Override
+    public ServletRequest getRequest() {
+        return facade;
+    }
 }

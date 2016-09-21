@@ -24,76 +24,76 @@ public class ResponseFacade implements ServletResponse{
 
     @Override
     public String getCharacterEncoding() {
-        return null;
+        return response.getCharacterEncoding();
     }
 
     @Override
     public String getContentType() {
-        return null;
+        return response.getContentType();
     }
 
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
-        return null;
+        return response.getOutputStream();
     }
 
     @Override
     public PrintWriter getWriter() throws IOException {
-        return null;
+        return response.getWriter();
     }
 
     @Override
     public void setCharacterEncoding(String charset) {
-
+        response.setCharacterEncoding(charset);
     }
 
     @Override
     public void setContentLength(int len) {
-
+        response.setContentLength(len);
     }
 
     @Override
     public void setContentType(String type) {
-
+        response.setContentType(type);
     }
 
     @Override
     public void setBufferSize(int size) {
-
+        response.setBufferSize(size);
     }
 
     @Override
     public int getBufferSize() {
-        return 0;
+        return response.getBufferSize();
     }
 
     @Override
     public void flushBuffer() throws IOException {
-
+        response.flushBuffer();
     }
 
     @Override
     public void resetBuffer() {
-
+        response.resetBuffer();
     }
 
     @Override
     public boolean isCommitted() {
-        return false;
+        return response.isCommitted();
     }
 
     @Override
     public void reset() {
-
+        response.reset();
     }
 
     @Override
     public void setLocale(Locale loc) {
-
+        response.setLocale(loc);
     }
 
     @Override
     public Locale getLocale() {
-        return null;
+        return response.getLocale();
     }
 }
