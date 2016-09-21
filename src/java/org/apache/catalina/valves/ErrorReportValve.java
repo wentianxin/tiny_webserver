@@ -14,6 +14,6 @@ public class ErrorReportValve extends ValveBase {
 
     @Override
     public void invoke(Request request, Response response, ValueContext valueContext) throws IOException, ServletException {
-
+        valueContext.invokeNext(request, response);
     }
 }
