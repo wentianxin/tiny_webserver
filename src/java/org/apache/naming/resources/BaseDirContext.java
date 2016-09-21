@@ -14,6 +14,9 @@ public abstract class BaseDirContext implements DirContext {
 
     protected Hashtable env = null;
 
+    protected boolean cached = true;
+
+
 
     public BaseDirContext() {
         this.env = new Hashtable();
@@ -31,6 +34,15 @@ public abstract class BaseDirContext implements DirContext {
 
     public String getDocBase() {
         return docBase;
+    }
+
+
+    public void setCached(boolean cached) {
+        this.cached = cached;
+    }
+
+    public boolean isCached() {
+        return cached;
     }
 
 
