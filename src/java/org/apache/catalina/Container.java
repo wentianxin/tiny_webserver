@@ -1,5 +1,6 @@
 package org.apache.catalina;
 
+import javax.naming.directory.DirContext;
 import javax.servlet.ServletException;
 import java.io.IOException;
 
@@ -77,7 +78,11 @@ public interface Container {
     public void setLoader(Loader loader);
 
 
-
+    /**
+     * JNDI 资源
+     */
+    public DirContext getResources();
+    public void setResources(DirContext dirContext);
 
     // ------------------------------------------------------- Public Methods
 

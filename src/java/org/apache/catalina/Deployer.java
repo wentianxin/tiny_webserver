@@ -9,6 +9,14 @@ import java.net.URL;
 public interface Deployer {
 
 
+    public static final String PRE_INSTALL_EVENT = "pre-install";
+
+    public static final String INSTALL_EVENT = "install";
+
+    public static final String REMOVE_EVENT = "remove";
+
+
+
     public String getName();
 
 

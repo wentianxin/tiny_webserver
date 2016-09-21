@@ -1,6 +1,7 @@
 package org.apache.catalina;
 
 import org.apache.catalina.deploy.*;
+import org.apache.catalina.util.CharsetMapper;
 
 import javax.servlet.ServletContext;
 
@@ -20,12 +21,21 @@ public interface Context extends Container{
     public Object[] getApplicationListeners();
     public void setApplicationListeners(Object[] listeners);
     public String[] findApplicationListeners();
+    public void addApplicationListener(String listener);
     public void removeApplicationListener(String listener);
 
 
+    public void addConstraint(SecurityConstraint constraint);
+    public SecurityConstraint[] findConstraints();
+    public void removeConstraint(SecurityConstraint constraint);
 
-//    public CharsetMapper getCharsetMapper();
-//    public void setCharsetMapper(CharsetMapper mapper);
+
+    public void getLoginConfig();
+    public void setLoginConfig(LoginConfig config);
+
+
+    public CharsetMapper getCharsetMapper();
+    public void setCharsetMapper(CharsetMapper mapper);
 
 
     public boolean getCookies();
