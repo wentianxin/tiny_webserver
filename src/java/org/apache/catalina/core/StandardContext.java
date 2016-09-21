@@ -4,11 +4,15 @@ import org.apache.catalina.*;
 import org.apache.catalina.deploy.*;
 import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.session.StandardManager;
+import org.apache.catalina.util.CharsetMapper;
+import org.apache.catalina.util.RequestUtil;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import org.apache.naming.resources.BaseDirContext;
 import org.apache.naming.resources.FileDirContext;
 import org.apache.naming.resources.WARDirContext;
 
+import javax.naming.directory.DirContext;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -17,6 +21,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Stack;
+
+import static com.sun.javafx.scene.SceneHelper.setPaused;
 
 /**
  * Created by tisong on 9/3/16.
@@ -33,6 +40,14 @@ public class StandardContext
     private boolean override = false;
 
     private boolean useNaming = true;
+    private boolean filesystemBased = false;
+
+    /**
+     * TODO 关于 Context 缓存的配置问题
+     */
+    private boolean cachingAllowed = true;
+
+
 
     private String displayName = null;
 
@@ -69,7 +84,7 @@ public class StandardContext
 
 
     /**
-     * pattern - name
+     * url pattern - servlet name;(解析web.xml的时候添加对象)
      */
     private Map<String, String> servletMappings = new HashMap<String, String>();
     /**
@@ -91,13 +106,15 @@ public class StandardContext
     private ApplicationContext context =  null;
 
 
+    private NamingContextListener namingContextListener = null;
+
+    private NamingResources namingResources = new NamingResources();
+
+    private String namingContextName = null;
 
     public StandardContext() {
-
         super();
-
         pipeline.setBasic(new StandardContextValve());
-
         logger.info("StandardContext 实例化");
     }
 
@@ -105,19 +122,25 @@ public class StandardContext
 
 
 
-
+    protected void addDefaultMapper(String mapperClass) {
+        super.addDefaultMapper(this.mapperClass);
+    }
 
 
     @Override
     public void addServletMapping(String pattern, String name) {
 
+        System.out.println("addServletMapping的 pattern: " + pattern + "; name: " + name);
+
         servletMappings.put(pattern, name);
 
+        fireContainerEvent("addServletMapping", pattern);
     }
+
 
     @Override
     public String findServletMapping(String pattern) {
-        return null;
+        return servletMappings.get(pattern);
     }
 
     @Override
@@ -129,6 +152,7 @@ public class StandardContext
     public void removeServletMapping(String pattern) {
 
     }
+
 
     @Override
     public NamingResources getNamingResources() {
@@ -146,7 +170,47 @@ public class StandardContext
     }
 
     @Override
+    public void addApplicationListener(String listener) {
+
+    }
+
+    @Override
     public void removeApplicationListener(String listener) {
+
+    }
+
+    @Override
+    public void addConstraint(SecurityConstraint constraint) {
+
+    }
+
+    @Override
+    public SecurityConstraint[] findConstraints() {
+        return new SecurityConstraint[0];
+    }
+
+    @Override
+    public void removeConstraint(SecurityConstraint constraint) {
+
+    }
+
+    @Override
+    public void getLoginConfig() {
+
+    }
+
+    @Override
+    public void setLoginConfig(LoginConfig config) {
+
+    }
+
+    @Override
+    public CharsetMapper getCharsetMapper() {
+        return null;
+    }
+
+    @Override
+    public void setCharsetMapper(CharsetMapper mapper) {
 
     }
 
@@ -199,10 +263,16 @@ public class StandardContext
         return this.override;
     }
 
+
     @Override
     public Wrapper createWrapper() {
-        return null;
+
+
+        Wrapper wrapper = new StandardWrapper();
+
+        return wrapper;
     }
+
 
     @Override
     public String getWrapperClass() {
@@ -327,7 +397,97 @@ public class StandardContext
     @Override
     public void reload() {
 
+
+        setPaused(true);
+
+        if (manager != null && manager instanceof Lifecycle) {
+            try {
+                ((Lifecycle) manager).stop();
+            } catch (LifecycleException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Container[] children = findChildren();
+        for (Container child: children) {
+            Wrapper wrapper = (Wrapper)child;
+            if (wrapper instanceof Lifecycle) {
+                try {
+                    ((Lifecycle) wrapper).stop();
+                } catch (LifecycleException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        listenerStop();
+
+        if (context != null)
+            context.clearAttributes();
+
+        filterStop();
+
+
+        namingContextListener.lifecycleEvent(new LifecycleEvent(this, Lifecycle.STOP_EVENT));
+
+        if ((loader != null) && (loader instanceof Lifecycle)) {
+            try {
+                ((Lifecycle) loader).stop();
+            } catch (LifecycleException e) {
+               // log(sm.getString("standardContext.stoppingLoader"), e);
+            }
+        }
+
+
+
+        // Restart our application class loader
+        if ((loader != null) && (loader instanceof Lifecycle)) {
+            try {
+                ((Lifecycle) loader).start();
+            } catch (LifecycleException e) {
+                //log(sm.getString("standardContext.startingLoader"), e);
+            }
+        }
+
+
+        listenerStart();
+
+        filterStart();
+
+
+        postResources();
+        postWelcomeFiles();
+
+        for (Container child: children) {
+            Wrapper wrapper = (Wrapper)child;
+            if (wrapper instanceof Lifecycle) {
+                try {
+                    ((Lifecycle) wrapper).start();
+                } catch (LifecycleException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        //loadOnStartup(children);
+
+
+        if ((manager != null) && (manager instanceof Lifecycle)) {
+            try {
+                ((Lifecycle) manager).start();
+            } catch (LifecycleException e) {
+                //log(sm.getString("standardContext.startingManager"), e);
+            }
+        }
+
+        setPaused(false);
+
+        // Notify our interested LifecycleListeners
+        //lifecycleSupport.fireLifecycleEvent(Context.RELOAD_EVENT, null);
+
     }
+
+
 
 
     @Override
@@ -359,6 +519,7 @@ public class StandardContext
     @Override
     public void setPath(String path) {
 
+        setName(RequestUtil.URLDecode(path));
     }
 
     @Override
@@ -421,15 +582,23 @@ public class StandardContext
      */
     public void start() throws LifecycleException {
 
+        if (started) {
+            throw new LifecycleException(sm.getString("containerBase.alreadyStarted"));
+        }
+
+
+        lifecycleSupport.fireLifecycleEvent(BEFORE_START_EVENT, null);
+
 
         setAvailable(false);
-        //setConfigured(false);
+        setConfigured(false);
 
         boolean ok = true;
 
-
+        /**
+         * Context 所抽象的资源(文件 与 文件夹均看做资源); setResources 会对 WAR 和 File进行封装, 最后的实际对象是: <code>ProxyDirContext</code>
+         */
         if (getResources() == null) {
-
             if (docBase != null && docBase.endsWith(".war")) {
                 setResources(new WARDirContext());
             } else {
@@ -437,19 +606,28 @@ public class StandardContext
             }
         }
 
+        /**
+         * 设置默认的类加载器
+         */
         if (getLoader() == null) {
             setLoader(new WebappLoader(getParentClassLoader()));
         }
 
+        /**
+         * 设置默认的 Session管理器
+         */
         if (getManager() == null) {
             setManager(new StandardManager());
         }
+
 
         if (ok) {
            // DirContextURLStreamHandler.bind(getResources());
         }
 
-        // Initialize character set mapper
+        /**
+         * 创建 CharsetMapper 实例; 暂时不清楚该实例使用在哪里
+         */
         getCharsetMaper();
 
         /**
@@ -457,15 +635,33 @@ public class StandardContext
          */
         postWorkDirectory();
 
+
+        String useNamingProperty = System.getProperty("catalina.useNaming");
+        if ( ("false").equals(useNamingProperty)) {
+            useNaming = false;
+        } else if (ok && namingContextListener == null){
+            namingContextListener = new NamingContextListener();
+            namingContextListener.setName(getNamingContextName());
+            addLifecycleListener(namingContextListener);
+        }
+
+
+
         if (ok) {
             super.start();
         }
+
+        if (!getConfigured() ) {
+            ok = false;
+        }
+
+
 
         /**
          * 初始化与 Context 关联的 JNDI 资源
          */
         if (ok && isUseNaming()) {
-            createMamingContext();
+            createNamingContext();
         }
 
         // We put the resources into the servlet context
@@ -490,7 +686,7 @@ public class StandardContext
             setAvailable(false);
         }
 
-
+        lifecycleSupport.fireLifecycleEvent(AFTER_START_EVENT, null);
     }
 
 
@@ -504,16 +700,20 @@ public class StandardContext
      */
     private void postWorkDirectory() {
 
+
+
         String parentName = null;
         if (getParent() != null) {
             parentName = getParent().getName();
         }
-        if (getParent() == null || parentName.length() < 1) {
+        if (parentName == null || parentName.length() < 1) {
             parentName = "_";
         }
 
         String workDir = getWorkDir();
         if (workDir == null) {
+
+
             String temp = getPath();
             if (temp.startsWith("/")) {
                 temp = temp.substring(1);
@@ -551,6 +751,14 @@ public class StandardContext
 
     }
 
+
+    private void postResources() {
+        getServletContext().setAttribute
+                (Globals.RESOURCES_ATTR, getResources());
+    }
+
+
+
     /**
      * 将 FitlerDef 转化为 ApplicationFilterConfig(封装了一个Filter对象)
      * @return
@@ -577,6 +785,12 @@ public class StandardContext
         }
 
         return ok;
+    }
+
+
+    public boolean filterStop() {
+
+        return true;
     }
 
     /**
@@ -610,6 +824,11 @@ public class StandardContext
     }
 
 
+
+    public boolean listenerStop() {
+        return true;
+    }
+
     private void postWelcomeFiles() {
 //        getServletContext().setAttribute("org.apache.catalina.WELCOME_FILES",
 //                welcomeFiles);
@@ -617,7 +836,7 @@ public class StandardContext
     }
 
 
-    private void createMamingContext() {
+    private void createNamingContext() {
 
     }
 
@@ -669,4 +888,59 @@ public class StandardContext
     }
 
 
+
+
+    public void setResources(DirContext resource) {
+
+        if (resources instanceof BaseDirContext) {
+            ((BaseDirContext) resources).setDocBase(getBasePath());
+            ((BaseDirContext) resources).setCached(isCachingAllowed());
+        }
+
+        if (resources instanceof FileDirContext) {
+            filesystemBased = true;
+        }
+
+        super.setResources(resources);
+        if (started) {
+            getServletContext().setAttribute
+                    (Globals.RESOURCES_ATTR, getResources());
+        }
+    }
+
+
+    public boolean isCachingAllowed() {
+        return cachingAllowed;
+    }
+
+    public void setCachingAllowed(boolean cachingAllowed) {
+        this.cachingAllowed = cachingAllowed;
+    }
+
+
+    /**
+     * 获取 naming context 全称
+     */
+    private String getNamingContextName() {
+
+        if (namingContextName == null) {
+            Container parent = getParent();
+            if (parent == null) {
+                namingContextName = getName();
+            } else {
+                Stack stk = new Stack();
+                StringBuffer buff = new StringBuffer();
+                while (parent != null) {
+                    stk.push(parent.getName());
+                    parent = parent.getParent();
+                }
+                while (!stk.empty()) {
+                    buff.append("/" + stk.pop());
+                }
+                buff.append(getName());
+                namingContextName = buff.toString();
+            }
+        }
+        return namingContextName;
+    }
 }

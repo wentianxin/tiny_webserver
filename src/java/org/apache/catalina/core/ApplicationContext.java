@@ -147,6 +147,13 @@ public class ApplicationContext implements ServletContext{
 
     }
 
+
+    public void clearAttributes() {
+
+
+    }
+
+
     @Override
     public String getServletContextName() {
         return null;

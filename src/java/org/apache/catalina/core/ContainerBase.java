@@ -3,14 +3,15 @@ package org.apache.catalina.core;
 import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleSupport;
 import org.apache.catalina.util.StringManager;
+import org.apache.naming.resources.BaseDirContext;
+import org.apache.naming.resources.FileDirContext;
+import org.apache.naming.resources.ProxyDirContext;
 
 import javax.naming.directory.DirContext;
 import javax.servlet.ServletException;
+import java.beans.PropertyChangeSupport;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by tisong on 9/3/16.
@@ -55,6 +56,9 @@ public class ContainerBase
      */
     protected LifecycleSupport lifecycleSupport = new LifecycleSupport(this);
 
+    protected PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
+
+
     /**
      * Container Listener
      */
@@ -65,18 +69,45 @@ public class ContainerBase
     protected boolean started = false;
 
 
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
     public String getName() {
         return this.name;
     }
 
+    public void setName(String name) {
+
+        System.out.println(this + "设置名字: " + name);
+        String oldName = this.name;
+
+        this.name = name;
+
+        propertyChangeSupport.firePropertyChange("name", oldName, this.name);
+    }
+
+
+    /**
+     * 对 resources 资源进行再次包装, 实际是包装成 ProxyDirContext对象
+     * @param resources
+     */
     public void setResources(DirContext resources) {
-        this.resources = resources;
+
+        DirContext oldResources = this.resources;
+        if (oldResources == resources) {
+            return ;
+        }
+
+        Hashtable env = new Hashtable();
+
+        // TODO 这里说 父类是 Host; 即意为着只有 context 才会调用
+        if (getParent() != null) {
+            env.put(ProxyDirContext.HOST, getParent().getName());
+        }
+
+        env.put(ProxyDirContext.CONTEXT, getName());
+
+        this.resources = new ProxyDirContext(env, resources);
+
+        propertyChangeSupport.firePropertyChange("resouces", oldResources, this.resources);
+
     }
 
     public DirContext getResources() {
@@ -161,7 +192,32 @@ public class ContainerBase
 
     @Override
     public void setLoader(Loader loader) {
+        Loader oldLoader = loader;
+        if (oldLoader == loader) {
+            return ;
+        }
+
         this.loader = loader;
+        if (started && oldLoader != null && oldLoader instanceof Lifecycle) {
+            try {
+                ((Lifecycle) oldLoader).stop();
+            } catch (LifecycleException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (loader != null) {
+            loader.setContainer(this);
+        }
+        if (started && loader instanceof Lifecycle) {
+            try {
+                ((Lifecycle) loader).start();
+            } catch (LifecycleException e) {
+                e.printStackTrace();
+            }
+        }
+
+        propertyChangeSupport.firePropertyChange("loader", oldLoader, this.loader);
     }
 
     @Override
@@ -169,11 +225,18 @@ public class ContainerBase
 
         child.setParent(this);
 
-        try {
-            ((Lifecycle)child).start();
-        } catch (LifecycleException e) {
-            e.printStackTrace();
+        /**
+         * 要多增加一个判断 started, 判断父类是否启动;
+         */
+        if (started && child instanceof Lifecycle) {
+            try {
+                ((Lifecycle) child).start();
+            } catch (LifecycleException e) {
+                e.printStackTrace();
+            }
         }
+
+        System.out.println("添加子容器: name: " + child.getName() + ";  对象: " + this);
 
         children.put(child.getName(), child);
 
@@ -326,7 +389,7 @@ public class ContainerBase
     // -------------------------------- implement Lifecycle
 
     /**
-     * 启动相关联的组件
+     * 启动相关联的组件: <code>Loader</code> <code>Manager</code>; <code>Resources</code>
      * 启动相关Mapper
      * 启动子容器
      * 启动绑定的流水线
@@ -334,6 +397,8 @@ public class ContainerBase
      */
     @Override
     public void start() throws LifecycleException {
+
+        System.out.println("当前启动容器是" + this);
 
         if (started) {
             throw new LifecycleException(
@@ -344,6 +409,7 @@ public class ContainerBase
         lifecycleSupport.fireLifecycleEvent(BEFORE_START_EVENT, null);
 
         addDefaultMapper(this.mapperClass);
+
 
         started = true;
 
@@ -381,7 +447,7 @@ public class ContainerBase
 
         lifecycleSupport.fireLifecycleEvent(START_EVENT, null);
 
-        lifecycleSupport.fireLifecycleEvent(AFTER_START_EVENT, null);
+        //lifecycleSupport.fireLifecycleEvent(AFTER_START_EVENT, null);
     }
 
     @Override
@@ -464,7 +530,9 @@ public class ContainerBase
 
 
 
-    protected void addDefaultMapper(String  mapperClass) {
+    protected void addDefaultMapper(String mapperClass) {
+
+        System.out.println("mapperClass: " + mapperClass);
 
         if (mapperClass == null || mappers.size() >= 1) {
             return ;

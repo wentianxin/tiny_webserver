@@ -1,9 +1,6 @@
 package org.apache.catalina.core;
 
-import org.apache.catalina.Container;
-import org.apache.catalina.Mapper;
-import org.apache.catalina.Request;
-import org.apache.catalina.Wrapper;
+import org.apache.catalina.*;
 import org.apache.catalina.util.StringManager;
 
 import javax.servlet.http.HttpServletRequest;
@@ -62,7 +59,7 @@ public class StandardContextMapper
         String name = null;
 
         if (wrapper == null) {
-            name = context.findServletMapping(relativeURI);
+            name = context.findServletMapping(relativeURI); // servlet name
             if (name != null) {
                 wrapper = (Wrapper) context.findChild(name);
             }
@@ -72,6 +69,61 @@ public class StandardContextMapper
             }
         }
 
+        if (wrapper == null) {
+            servletPath = relativeURI;
+            while (true) {
+                name = context.findServletMapping(servletPath + "/*");
+                if (name != null) {
+                    wrapper = (Wrapper) context.findChild(name);
+                }
+                if (wrapper != null) {
+                    pathInfo = relativeURI.substring(servletPath.length());
+                    if (pathInfo.length() == 0)
+                        pathInfo = null;
+                    break;
+                }
+                int slash = servletPath.lastIndexOf('/');
+                if (slash < 0) {
+                    break;
+                }
+                servletPath = servletPath.substring(0, slash);
+            }
+        }
+
+
+        if (wrapper == null) {
+            int slash = relativeURI.lastIndexOf('/');
+            if (slash >= 0) {
+                String last = relativeURI.substring(slash);
+                int period = last.lastIndexOf('.');
+                if (period >= 0) {
+                    String pattern = "*" + last.substring(period);
+                    name = context.findServletMapping(pattern);
+                    if (name != null)
+                        wrapper = (Wrapper) context.findChild(name);
+                    if (wrapper != null) {
+                        servletPath = relativeURI;
+                        pathInfo = null;
+                    }
+                }
+            }
+        }
+
+        if (wrapper == null) {
+            name = context.findServletMapping("/");
+            if (name != null)
+                wrapper = (Wrapper) context.findChild(name);
+            if (wrapper != null) {
+                servletPath = relativeURI;
+                pathInfo = null;
+            }
+        }
+
+        if (update) {
+            request.setWrapper(wrapper);
+            ((HttpRequest) request).setServletPath(servletPath);
+            ((HttpRequest) request).setPathInfo(pathInfo);
+        }
         return wrapper;
     }
 }

@@ -47,7 +47,7 @@ public class StandardHostMapper implements Mapper{
     @Override
     public Container map(Request request, boolean update) {
 
-        String requestURI = ((HttpServletRequest)request.getRequest()).getRequestURI();
+        String requestURI = ((HttpServletRequest)(request.getRequest())).getRequestURI();
 
         Context context = host.map(requestURI);
 

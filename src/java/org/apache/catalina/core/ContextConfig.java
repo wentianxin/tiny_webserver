@@ -1,10 +1,7 @@
 package org.apache.catalina.core;
 
 import jdk.internal.util.xml.impl.Input;
-import org.apache.catalina.Context;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleEvent;
-import org.apache.catalina.LifecycleListener;
+import org.apache.catalina.*;
 import org.apache.catalina.startup.*;
 import org.apache.catalina.startup.Constants;
 import org.apache.tomcat.util.digester.Digester;
@@ -41,6 +38,23 @@ public class ContextConfig implements LifecycleListener{
 
     private void start() {
 
+        context.setConfigured(false);
+
+        boolean ok = true;
+
+        Container container = context.getParent();
+        if ( !context.getOverride() ) {
+
+        }
+
+        defaultConfig();
+        applicationConfig();
+
+        if (ok) {
+            context.setConfigured(true);
+        } else {
+            context.setConfigured(false);
+        }
     }
 
     private void stop() {

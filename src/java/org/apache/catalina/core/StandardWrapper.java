@@ -1,10 +1,13 @@
 package org.apache.catalina.core;
 
+import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Loader;
 import org.apache.catalina.Wrapper;
 
 import javax.servlet.*;
+import java.beans.PropertyChangeSupport;
 import java.util.Enumeration;
+import java.util.HashMap;
 
 /**
  * Created by tisong on 9/3/16.
@@ -30,6 +33,14 @@ public class StandardWrapper extends ContainerBase
 
 
     private StandardWrapperFacade facade = new StandardWrapperFacade(this);
+
+
+
+    private HashMap parameters = new HashMap();
+
+
+
+
 
 
     public StandardWrapper() {
@@ -151,7 +162,10 @@ public class StandardWrapper extends ContainerBase
 
     @Override
     public void setServletClass(String servletClass) {
+        String oldServletClass = this.servletClass;
         this.servletClass = servletClass;
+        propertyChangeSupport.firePropertyChange("servletClass", oldServletClass,
+                this.servletClass);
     }
 
     @Override
@@ -163,13 +177,19 @@ public class StandardWrapper extends ContainerBase
     // ---------------------------------- Implements ServletConfig
     @Override
     public String getServletName() {
-        return null;
+        return getName();
     }
 
     @Override
     public ServletContext getServletContext() {
         return null;
     }
+
+
+
+
+
+
 
     @Override
     public String getInitParameter(String name) {
@@ -179,5 +199,29 @@ public class StandardWrapper extends ContainerBase
     @Override
     public Enumeration getInitParameterNames() {
         return null;
+    }
+
+
+
+    public void addInitParameter(String name, String value) {
+
+        parameters.put(name, value);
+    }
+
+
+
+    public void start() throws LifecycleException {
+        super.start();
+    }
+
+    public void stop() throws LifecycleException {
+
+        try {
+            unload();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
+
+        super.stop();
     }
 }

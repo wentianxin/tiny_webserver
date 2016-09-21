@@ -97,7 +97,10 @@ public class StandardServer
 
         Socket socket = null;
 
+
+
         try {
+            socket = serverSocket.accept();
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             while (true) {
                 String line = reader.readLine();

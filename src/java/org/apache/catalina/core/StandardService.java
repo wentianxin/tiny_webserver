@@ -128,6 +128,7 @@ public class StandardService
 
         for (Connector connector: connectors) {
             connector.initialize();
+            connector.setContainer(container);
         }
     }
 

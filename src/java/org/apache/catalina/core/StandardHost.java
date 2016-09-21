@@ -6,16 +6,17 @@ import org.apache.catalina.valves.ErrorDispatcherValve;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 
+import java.io.IOException;
+import java.net.URL;
+
 /**
  * Created by tisong on 9/3/16.
  */
 public class StandardHost
     extends ContainerBase
-        implements Host {
+        implements Host, Deployer{
 
     private static final Log logger = LogFactory.getLog(StandardHost.class);
-
-    private String name = null;
 
     private String[] aliases = new String[0];
 
@@ -57,19 +58,35 @@ public class StandardHost
         this.appBase = appBase;
     }
 
-//    @Override
-//    public void setName() {
-//
-//    }
 
-    @Override
-    public void setName(String name) {
-        this.name = name;
-    }
 
     @Override
     public Context map(String uri) {
-        return null;
+
+        if (uri == null) {
+            return null;
+        }
+
+        Context context = null;
+
+        String mapUri = uri;
+
+        while (true) {
+            context = (Context) findChild(mapUri);
+            if (context != null) { break;}
+
+            int slash = mapUri.lastIndexOf('/');
+            if (slash < 0) { break; }
+
+            mapUri = mapUri.substring(0, slash);
+        }
+
+        if (context == null) {
+            // Default Context
+            context = (Context) findChild("");
+        }
+
+        return context;
     }
 
 
@@ -119,7 +136,9 @@ public class StandardHost
     }
 
 
-
+    /**
+     * Host 容器启动: 增加默认 Valve <code>ErrorReportValve</code>; <code>ErrorDispatcherValve</code>
+     */
     public void start() throws LifecycleException {
 
         /**
@@ -145,5 +164,74 @@ public class StandardHost
         addValue(new ErrorDispatcherValve());
 
         super.start();
+    }
+
+
+    public String getContextClass() {
+        return contextClass;
+    }
+
+    public void setContextClass(String contextClass) {
+        this.contextClass = contextClass;
+    }
+
+    public String getConfigClass() {
+        return configClass;
+    }
+
+    public void setConfigClass(String configClass) {
+        this.configClass = configClass;
+    }
+
+
+
+
+
+
+
+    // --------------------------------------------------- implements Deployer
+
+    @Override
+    public void install(String contextPath, URL war) {
+
+        deployer.install(contextPath, war);
+    }
+
+    @Override
+    public void install(URL config, URL war) throws IOException {
+        deployer.install(config, war);
+    }
+
+    @Override
+    public Context findDepolyedApp(String contextPath) {
+        return deployer.findDepolyedApp(contextPath);
+    }
+
+    @Override
+    public String[] findDepolyedApps() {
+        return deployer.findDepolyedApps();
+    }
+
+    @Override
+    public void remove(String contextPath) throws IOException {
+        deployer.remove(contextPath);
+    }
+
+    @Override
+    public void start(String contextPath) throws IOException {
+        deployer.start(contextPath);
+    }
+
+    @Override
+    public void stop(String contextPath) throws IOException {
+        deployer.stop(contextPath);
+    }
+
+
+
+    // -------------------------------------------------------- Protected Methods
+
+    protected void addDefaultMapper(String mapperClass) {
+        super.addDefaultMapper(this.mapperClass);
     }
 }

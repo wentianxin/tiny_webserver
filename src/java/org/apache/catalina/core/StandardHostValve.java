@@ -23,10 +23,10 @@ public class StandardHostValve extends ValveBase{
     @Override
     public void invoke(Request request, Response response, ValueContext valueContext) throws IOException, ServletException {
 
-        if (!(request.getRequest() instanceof HttpServletRequest) ||
-                !(response.getResponse() instanceof HttpServletResponse)) {
-            return;     // NOTE - Not much else we can do generically
-        }
+//        if (!(request.getRequest() instanceof HttpServletRequest) ||
+//                !(response.getResponse() instanceof HttpServletResponse)) {
+//            return;     // NOTE - Not much else we can do generically
+//        }
 
         StandardHost host = (StandardHost) getContainer();
         Context context = (Context) host.map(request, true);
