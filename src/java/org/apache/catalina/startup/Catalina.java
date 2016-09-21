@@ -295,6 +295,7 @@ public class Catalina {
     }
 
 
+
     /**
      * Server
      *  GlobalNamingResources
@@ -329,7 +330,9 @@ public class Catalina {
                                  "org.apache.catalina.core.StandardServer",
                                  "className");
         digester.addSetProperties("Server");
-
+        digester.addSetNext("Server",
+                            "setServer",
+                            "org.apache.catalina.Server");
         /**
          * Server 全局资源的实例化
          **/
@@ -530,6 +533,8 @@ public class Catalina {
     public void setServer(Server server) {
         this.server = server;
     }
+
+
 
     public void setParentClassLoader(ClassLoader parentClassLoader) {
         this.parentClassLoader = parentClassLoader;
